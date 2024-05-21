@@ -3,38 +3,26 @@ import pandas as pd
 import re
 import os
 
-SCGA = {
-    'baseLine': '',
-    'Load':  '',
-    'lvA': {},
-    'lvB': {},
-    'lvC': {},
-}
-
-test_plan = []
-test_exception = []
-BaseLine = "EDSGGF_GS_GCOM_00_002"
-SCGAxlsm = BaseLine + '_SCGA.xlsm'
+SCGAs = []
 
 def read_plan(testPlanSheet, rows):
     curRow = 8
-    files = []
-    baseLine = None
-    process = None
+    modules = []
     
     level_total_coverage = {
         'precentCoverageMCDC': 0,
         'precentCoverageAnalysis': 0,
         'totalCoverage': 0,
     }
-    file_ = {
+    module = {
         'name': None,
+        'process': None,
         'functions': []
     }
     while curRow <= rows + 1:
         range_ = f"{'A' + str(curRow)}:{'U' + str(curRow)}"
         info = testPlanSheet.range(range_).options(transpose=True).value
-        print(info)
+        print(f'{curRow}: {info[1]} -> {info[2]}')
         # collect level total coverage
         if info[1] is None:
             if info[0] == 'Level Total':
@@ -43,9 +31,6 @@ def read_plan(testPlanSheet, rows):
                 level_total_coverage['totalCoverage'] = info[9]
             else:
                 continue
-        if curRow == 8:
-            baseLine = info[3]
-            process = info[0]
         function = {
             'name': None,
             'analyst': None,
@@ -82,14 +67,16 @@ def read_plan(testPlanSheet, rows):
             'nonTech': None,
             'process': None,
         }
-        if file_['name'] != info[1]:
-            if file_['name'] is not None:
-                files.append(file_)
-            file_ = {
+        if module['name'] != info[1]:
+            if module['name'] is not None:
+                modules.append(module)
+            module = {
                 'name': None,
                 'functions': []
             }
-            file_['name'] = info[1]
+            module['process'] = info[0]
+            module['name'] = info[1]
+
         # oversight
         function['oversight'] = info[17]
         # defect classification
@@ -120,43 +107,140 @@ def read_plan(testPlanSheet, rows):
         function['moduleStrucData'] = module_structure_data
         function['oversight'] = info[17]
         function['defectClassification'] = defect_classification
-        file_['functions'].append(function)
+        module['functions'].append(function)
         
         curRow = curRow + 1
-    return baseLine, process, files, level_total_coverage
+    return modules, level_total_coverage
         
 
+def read_exceptions(testExceptionSheet, rows):
+    curRow = 7
+    modules = []
 
-
-def read_exceptions():
-    pass
+    module = {
+        'name': None,
+        'functions': []
+    }
+    function = {
+        'name': None,
+        'note': None,
+        'uncoverage': []
+    }
+    total = 0
+    while curRow <= rows + 1:
+        range_ = f"{'A' + str(curRow)}:{'M' + str(curRow)}"
+        info = testExceptionSheet.range(range_).options(transpose=True).value
+        print(f'{curRow}: {info[1]} -> {info[2]}')
+        if function['name'] != info[2]:
+            if function['name'] is not None:
+                module['functions'].append(function)
+            function = {
+                'name': None,
+                'note': None,
+                'uncoverages': []
+            }
+            function['name'] = info[2]
+        if module['name'] != info[1]:
+            if module['name'] is not None:
+                modules.append(module)
+            module = {
+                'name': None,
+                'functions': []
+            }
+            module['name'] = info[1]
+        
+        uncoverage = {
+            'uncoveredSWLine': [],
+            'uncoveredinstrumentedSWLine': [],
+            'requirementID': [],
+            'analyst': None,
+            'class': None,
+            'analysisSummary': None,
+            'correctActionSummary': None,
+            'issue': None,
+            'applicable': {}
+        }
+        applicable = {
+            'PAR_SCR': None,
+            'Comments': None
+        }
+        function['note'] = info[0]
+        # uncovered software line
+        uncoverage['uncoveredSWLine'] = info[3]
+        # uncovered software code
+        uncoverage['uncoveredinstrumentedSWLine'] = info[4]
+        # requirements
+        if info[5] is not None:
+            uncoverage['requirementID'] = str(info[5]).split('\n')
+        uncoverage['analyst'] = info[6]
+        uncoverage['class'] = info[7]
+        uncoverage['correctActionSummary'] = info[9]
+        uncoverage['issue'] = info[10]
+        applicable['PAR_SCR'] = info[11]
+        applicable['Comments'] = info[12]
+        uncoverage['applicable'] = applicable
+        function['uncoverages'].append(uncoverage)
+        total = total + 1
+        curRow = curRow + 1
+    # print(f'total rows: {total}')
+    return modules
 
 
 def read_SCGA(app, scga_path):
-    test_plan = {
-        'sheetName': None,
-        'baseLine': None,
-        'process': None,
-        'level': None,
-        'files': [],
-        'lvTotalCoverage': {}
+    SCGA = {
+        'sheetName': os.path.basename(scga_path),
+        'baseLine': str(os.path.basename(scga_path)).split('_SCGA')[0],
+        'levelATest': {},
+        'levelBTest': {},
+        'levelCTest': {}
     }
-    test_plan['baseLine'] = str(scga_path).split('\\')[-1].split('_SCGA')[0]
-    test_exception = []
     scga_sheets = app.books.open(scga_path)
     sheet_name_list = [sheet.name for sheet in scga_sheets.sheets]
     for currentSheet in scga_sheets.sheets:
         if 'Level' in currentSheet.name:
             if 'Plan' in currentSheet.name:
+                test_plan = {
+                    'sheetName': None,
+                    'modules': [],
+                    'lvTotalCoverage': {}
+                }
+                # continue
                 rows = len(pd.read_excel(scga_path, currentSheet.name))
                 print(f"Total functions of {currentSheet} is: {rows - 7}")
-                test_plan['sheetName'] = currentSheet.name
-                test_plan['level'] = 'Level ' + str(currentSheet.name).split(' ')[1]
-                test_plan['baseLine'], test_plan['process'], test_plan['files'], test_plan['lvTotalCoverage'] = read_plan(currentSheet, rows)
+                if rows - 7 != 0:
+                    test_plan['sheetName'] = currentSheet.name
+                    test_plan['level'] = str(currentSheet.name).split(' ')[1]
+                    test_plan['modules'], test_plan['lvTotalCoverage'] = read_plan(currentSheet, rows)
+                    if test_plan['level'] == 'A':
+                        SCGA['levelATest']['testPlan'] = test_plan
+                    elif test_plan['level'] == 'B':
+                        SCGA['levelBTest']['testPlan'] = test_plan
+                    elif test_plan['level'] == 'C':
+                        SCGA['levelCTest']['testPlan'] = test_plan
             elif 'Exceptions' in currentSheet.name:
+                test_exception = {
+                    'sheetName': None,
+                    'level': None,
+                    'modules': [],
+                }
                 rows = len(pd.read_excel(scga_path, currentSheet.name))
-                print(f"Total uncovered situation of {currentSheet} is: {rows - 5}")
-                read_exceptions()
+                print(f"Total uncovered situation of {currentSheet.name} is: {rows - 5}")
+                if rows - 5 != 0:
+                    test_exception['sheetName'] = currentSheet.name
+                    test_exception['level'] = str(currentSheet.name).split(' ')[1]
+                    test_exception['modules'] = read_exceptions(currentSheet, rows)
+                    if test_exception['level'] == 'A':
+                        SCGA['levelATest']['testException'] = test_plan
+                    elif test_exception['level'] == 'B':
+                        SCGA['levelBTest']['testException'] = test_plan
+                    elif test_exception['level'] == 'C':
+                        SCGA['levelCTest']['testException'] = test_plan
+    return SCGA
+    
+
+
+
+                
 
 def output_as_buffer():
     pass
@@ -165,8 +249,8 @@ def main():
     try:
         excelApp = xw.App(visible=False, add_book=False)
         read_SCGA(excelApp, r'C:\Users\H471967\Documents\4_SelfDev\SCGA\testExcel\EDSGGF_GS_G9CM_00_003_SCGA_1.xlsm')
-    except:
-        pass
+    except Exception:
+         print(Exception())
     finally:
         excelApp.quit()
 
