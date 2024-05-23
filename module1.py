@@ -328,7 +328,8 @@ def main():
             with open(scga_log, 'w', encoding='UTF-8') as f:
                 for root, dirs, files in os.walk(rootPath):
                     for scga_f in files:
-                        if scga_f.endswith('xlsm'):
+                        # ignore not 'xlsm' file and excel buffer file
+                        if scga_f.endswith('xlsm') and '~' not in str(scga_f):
                             print(f'='*80)
                             print(f"extracting {scga_f}...")
                             print(f'='*80, file=f)
