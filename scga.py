@@ -337,7 +337,7 @@ def generate_alphabet_list(n):
     return [chr(i) for i in range(65, 65 + n)]
 
 
-def output_as_sheet(rootPath, scgaList):
+def output_all_functions_as_sheet(rootPath, scgaList):
     excelApp = xw.App(visible=False, add_book=False)
     wb = excelApp.books.add()
     ws = wb.sheets[0]
@@ -395,7 +395,7 @@ def main():
                             print(f'extraction done !', file=f)
                             print(f'='*80, file=f)
                             print('', file=f)
-            output_as_sheet(rootPath, all_scga_function_list)
+            output_all_functions_as_sheet(rootPath, all_scga_function_list)
         except BaseException as err:
             # print(repr(keyerr))
             print(traceback.print_exc())
