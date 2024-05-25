@@ -1,13 +1,14 @@
 import xlwings as xw
 import pandas as pd
-import re
 import os
 import traceback
+import json
+import pickle
+import datetime
 
-SCGAs = []
-
-all_scga_function_list = []
-
+def output_log(str_):
+    print(str_)
+    print(str_, file=scga_log_f)
 
 
 def read_plan(testPlanSheet, rows):
@@ -108,7 +109,11 @@ def read_plan(testPlanSheet, rows):
         function['name'] = info[2]
         function['analyst'] = info[4]
         function['site'] = info[5]
-        function['startDate'] = info[6]
+        # strfy datetime
+        if isinstance(info[6], datetime.datetime):
+            function['startDate'] = info[6].strftime("%Y-%m-%d")
+        else:
+            function['startDate'] = info[6]
         function['coverage'] = coverage
         function['moduleStrucData'] = module_structure_data
         function['oversight'] = info[17]
@@ -135,19 +140,12 @@ def read_plan(testPlanSheet, rows):
                     functions_name_list.append(function['name'])
                     total_function = total_function + 1
 
-    
-    print(f"Total functions of {testPlanSheet.name} is: {total_function}")
-    print(f"total functions shows as below ({len(functions_name_list)}):")
-    print(functions_name_list)
-    print(f"total module shows as below ({len(modules_name_list)}):")
-    print(modules_name_list)
     # write into log file
-    with open(scga_log, 'a', encoding='UTF-8') as f:
-        print(f"Total functions of {testPlanSheet.name} is: {total_function}", file=f)
-        print(f"total functions shows as below ({len(functions_name_list)}):", file=f)
-        print(functions_name_list, file=f)
-        print(f"total module shows as below ({len(modules_name_list)}):", file=f)
-        print(modules_name_list, file=f)
+    output_log(f"Total functions of {testPlanSheet.name} is: {total_function}")
+    output_log(f"total functions shows as below ({len(functions_name_list)}):")
+    output_log(functions_name_list)
+    output_log(f"total module shows as below ({len(modules_name_list)}):")
+    output_log(modules_name_list)
         
     return modules, level_total_coverage, functions_name_list
         
@@ -239,18 +237,13 @@ def read_exceptions(testExceptionSheet, rows):
                             (uncovered_modules[i])['functions'][j]['uncoverages'].append(uncoverage)
                             (uncovered_modules[i])['functions'][j]['uncoverageCount'] = (uncovered_modules[i])['functions'][j]['uncoverageCount'] + 1
                             total_uncoverage = total_uncoverage + 1
-    print(f"Total uncovered situation of {testExceptionSheet.name} is: {total_uncoverage}")
-    print(f"total functions shows as below ({len(uncovered_functions_name_list)}):")
-    print(uncovered_functions_name_list)
-    print(f"total module shows as below ({len(uncovered_modules_name_list)}):")
-    print(uncovered_modules_name_list)
-     # write into log file
-    with open(scga_log, 'a', encoding='UTF-8') as f:
-        print(f"Total uncovered situation of {testExceptionSheet.name} is: {total_uncoverage}", file=f)
-        print(f"total uncovered functions shows as below ({len(uncovered_functions_name_list)}):", file=f)
-        print(uncovered_functions_name_list, file=f)
-        print(f"total uncovered module shows as below ({len(uncovered_modules_name_list)}):", file=f)
-        print(uncovered_modules_name_list, file=f)
+    # write into log file
+    output_log(f"Total uncovered situation of {testExceptionSheet.name} is: {total_uncoverage}")
+    output_log(f"total functions shows as below ({len(uncovered_functions_name_list)}):")
+    output_log(uncovered_functions_name_list)
+    output_log(f"total module shows as below ({len(uncovered_modules_name_list)}):")
+    output_log(uncovered_modules_name_list)
+    
     return uncovered_modules
 
 
@@ -272,13 +265,10 @@ def read_SCGA(app, scga_path):
     sheet_name_list = [sheet.name for sheet in scga_sheets.sheets]
     for currentSheet in scga_sheets.sheets:
         if 'Level' in currentSheet.name:
-            print(f'='*60)
-            print(f'extration of {currentSheet.name}')
-            with open(scga_log, 'a', encoding='UTF-8') as f:
-                # point to file end
-                f.seek(0, 2)
-                print(f'='*60, file=f)
-                print(f'extration of {currentSheet.name}', file=f)
+            # point to file end
+            scga_log_f.seek(0, 2)
+            output_log(f'='*60)
+            output_log(f'extration of {currentSheet.name}')
             if 'Plan' in currentSheet.name:
                 test_plan = {
                     'sheetName': None,
@@ -300,11 +290,8 @@ def read_SCGA(app, scga_path):
                         SCGA['levelCTest']['testPlan'] = test_plan
                         scga_function_list['levelCFunctions'] = function_list
                 else:
-                    with open(scga_log, 'a', encoding='UTF-8') as f:
-                        # point to file end
-                        f.seek(0, 2)
-                        print(f'* SCGA information not found in {currentSheet.name}')
-                        print(f'* SCGA information not found in {currentSheet.name}', file=f)
+                    scga_log_f.seek(0, 2)
+                    output_log(f'* SCGA Test Plan information not found in {currentSheet.name}')
             elif 'Exceptions' in currentSheet.name:
                 test_exception = {
                     'sheetName': None,
@@ -323,13 +310,34 @@ def read_SCGA(app, scga_path):
                     elif test_exception['level'] == 'C':
                         SCGA['levelCTest']['testException'] = test_exception
                 else:
-                    with open(scga_log, 'a', encoding='UTF-8') as f:
-                        # point to file end
-                        f.seek(0, 2)
-                        print(f'* SCGA information not found in {currentSheet.name}')
-                        print(f'* SCGA information not found in {currentSheet.name}', file=f)
+                    scga_log_f.seek(0, 2)
+                    output_log(f'* SCGA Test Execptions information not found in {currentSheet.name}')
     return SCGA, scga_function_list
 
+
+def read_SCGAs(app, scga_root_path):
+    SCGAs = []
+    all_scga_function_list = []
+    for root, dirs, files in os.walk(scga_root_path):
+        for scga_f in files:
+            # only handle 'SCGA' excel file, and ignore not 'xlsm' file and excel buffer file
+            if scga_f.endswith('xlsm') and '~' not in str(scga_f) and 'SCGA' in str(scga_f):
+                output_log(f'='*80)
+                output_log(f"extracting {scga_f}...")
+                # write down frist
+                scga_log_f.flush()
+                SCGA, scga_function_list= read_SCGA(app, os.path.join(root, scga_f))
+                SCGAs.append(SCGA)
+                json.dump(SCGA, scga_json, indent=4, default=str)
+                pickle.dump(SCGA, scga_pickle, protocol=pickle.HIGHEST_PROTOCOL)
+                all_scga_function_list.append(scga_function_list)
+                # point to file end
+                scga_log_f.seek(0, 2)
+                output_log(f'='*60)
+                output_log(f'extraction done !')
+                output_log(f'='*80)
+                print()
+    return SCGAs, all_scga_function_list
 
 def generate_alphabet_list(n):
     if n < 1 or n > 26:
@@ -350,7 +358,7 @@ def output_all_functions_as_sheet(rootPath, scgaList):
         ws.range(f'{column_range[idx]}1').value = value['baseLine']
         ws.range(start_pos).options(transpose=True).value = value['levelAFunctions']
         
-    wb.save(os.path.join(rootPath, 'SCGAFunctionsList.xlsm'))
+    wb.save(os.path.join(rootPath, 'all_functions.xlsm'))
     wb.close()
     excelApp.quit()
 
@@ -360,47 +368,56 @@ def output_as_db():
 def read_db():
     pass
 
-def search_func():
+def search_func(str_):
     pass
 
-scga_log = None
+scga_log_f = None
+scga_json = None
+scga_pickle = None
 def main():
+    global scga_log_f, scga_json, scga_pickle
+    print(f'='*80)
+    selection = input(
+        "Welcom to SCGA extration:\n" + \
+        "\t1. Extract new SCGA data group\n" + \
+        "\t2. Add new SCGA data group\n" + \
+        "\t3. Search function from existing SCGA data group\n" + \
+        "Choose your operation: ")
+    print(f'='*80)
     global scga_log
-    rootPath = input("Please enter the root path: ")
-    if os.path.isdir(rootPath):
-        try:
-            scga_log = os.path.join(rootPath + r'\scga_log.txt')
-            excelApp = xw.App(visible=False, add_book=False)
-            with open(scga_log, 'w', encoding='UTF-8') as f:
-                for root, dirs, files in os.walk(rootPath):
-                    for scga_f in files:
-                        # only handle 'SCGA' excel file, and ignore not 'xlsm' file and excel buffer file
-                        if scga_f.endswith('xlsm') and '~' not in str(scga_f) and 'SCGA' in str(scga_f):
-                            print(f'='*80)
-                            print(f"extracting {scga_f}...")
-                            print(f'='*80, file=f)
-                            print(f"extracting {scga_f}...", file=f)
-                            # write down frist
-                            f.flush()
-                            SCGA, scga_function_list= read_SCGA(excelApp, os.path.join(root, scga_f))
-                            SCGAs.append(SCGA)
-                            all_scga_function_list.append(scga_function_list)
-                            # point to file end
-                            f.seek(0, 2)
-                            print(f'='*60)
-                            print(f'extraction done !')
-                            print(f'='*80)
-                            print()
-                            print(f'='*60, file=f)
-                            print(f'extraction done !', file=f)
-                            print(f'='*80, file=f)
-                            print('', file=f)
-            output_all_functions_as_sheet(rootPath, all_scga_function_list)
-        except BaseException as err:
-            # print(repr(keyerr))
-            print(traceback.print_exc())
-        finally:
-            excelApp.quit()
+    if int(selection) == 1 or int(selection) == 2:
+        SCGAs = []
+        rootPath = input("Please enter the root path: ")
+        excelApp = xw.App(visible=False, add_book=False)
+        while not os.path.isdir(rootPath):
+            rootPath = input("Can not found this location, please enter the root path again: ")
+        else:
+            try:
+                scga_log_path = os.path.join(rootPath + r'\scga_log.txt')
+                scgas_json_path = os.path.join(rootPath + r'\scgas.json')
+                scga_pickle_path = os.path.join(rootPath + r'\scgas.pkl')
+                if int(selection) == 1:
+                    scga_log_f = open(scga_log_path, 'w', encoding='UTF-8')
+                    scga_json = open(scgas_json_path, 'w', encoding='UTF-8')
+                    scga_pickle = open(scga_pickle_path, 'wb')
+                else:
+                    scga_log_f = open(scga_log_path, 'a', encoding='UTF-8')
+                    scgas_json_path = open(scgas_json_path, 'a', encoding='UTF-8')
+                    scga_pickle = open(scga_pickle_path, 'ab')
+                SCGAs, all_scga_function_list = read_SCGAs(excelApp, rootPath)
+                output_all_functions_as_sheet(rootPath, all_scga_function_list)
+            except BaseException as err:
+                # print(repr(keyerr))
+                print(traceback.print_exc())
+            finally:
+                excelApp.quit()
+                scga_log_f.close()
+                scga_json.close()
+    elif int(selection) == 3:
+        func = input("Input the function name: ")
+        search_func(func)
+        
+
 
 if __name__ == '__main__':
     main()
