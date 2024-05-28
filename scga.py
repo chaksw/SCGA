@@ -7,7 +7,7 @@ import pickle
 import datetime
 
 def output_log(str_):
-    print(str_)
+    # print(str_)
     print(str_, file=scga_log_f)
 
 
@@ -22,7 +22,7 @@ def read_plan(testPlanSheet, rows):
         'totalCoverage': 0,
     }
     module = {
-        'name': None,
+        'moduleName': None,
         'process': None,
         'functions': []
     }
@@ -38,7 +38,7 @@ def read_plan(testPlanSheet, rows):
             else:
                 continue
         function = {
-            'name': None,
+            'functionName': None,
             'analyst': None,
             'site': None,
             'startDate': None,
@@ -73,17 +73,17 @@ def read_plan(testPlanSheet, rows):
             'process': None,
         }
         # see if info a new module line
-        if module['name'] != info[1]:
+        if module['moduleName'] != info[1]:
             
-            if module['name'] is not None and module['name'] not in modules_name_list:
-                modules_name_list.append(module['name'])
+            if module['moduleName'] is not None and module['moduleName'] not in modules_name_list:
+                modules_name_list.append(module['moduleName'])
                 modules.append(module)
             module = {
-                'name': None,
+                'moduleName': None,
                 'functions': []
             }
             module['process'] = info[0]
-            module['name'] = info[1]
+            module['moduleName'] = info[1]
         # oversight
         function['oversight'] = info[17]
         # defect classification
@@ -106,7 +106,7 @@ def read_plan(testPlanSheet, rows):
         coverage['precentCoverageAnalysis'] = info[8]
         coverage['totalCoverage'] = info[9]
         # function
-        function['name'] = info[2]
+        function['functionName'] = info[2]
         function['analyst'] = info[4]
         function['site'] = info[5]
         # strfy datetime
@@ -122,22 +122,22 @@ def read_plan(testPlanSheet, rows):
         # see if info a new module line
         if info[1] not in modules_name_list or len(modules) == 0:
             module = {
-                'name': None,
+                'moduleName': None,
                 'functions': []
             }
             module['process'] = info[0]
-            module['name'] = info[1]
+            module['moduleName'] = info[1]
             module['functions'].append(function)
-            functions_name_list.append(function['name'])
+            functions_name_list.append(function['functionName'])
             total_function = total_function + 1
             modules.append(module)
-            modules_name_list.append(module['name'])
+            modules_name_list.append(module['moduleName'])
         # in case module already exist, add function to corresponding module
         else: 
             for index, moduleName in enumerate(modules_name_list):
-                if moduleName == str(module['name']):
+                if moduleName == str(module['moduleName']):
                     (modules[index])['functions'].append(function)
-                    functions_name_list.append(function['name'])
+                    functions_name_list.append(function['functionName'])
                     total_function = total_function + 1
 
     # write into log file
@@ -148,18 +148,18 @@ def read_plan(testPlanSheet, rows):
     output_log(modules_name_list)
         
     return modules, level_total_coverage, functions_name_list
-        
+
 
 def read_exceptions(testExceptionSheet, rows):
     uncovered_modules = []
     uncovered_modules_name_list = []
     uncovered_functions_name_list = []
     uncovered_module = {
-        'name': None,
+        'moduleName': None,
         'functions': []
     }
     uncovered_function = {
-        'name': None,
+        'functionName': None,
         'note': None,
         'uncoverage': []
     }
@@ -202,38 +202,38 @@ def read_exceptions(testExceptionSheet, rows):
         # see if info has new function
         if info[2] not in uncovered_functions_name_list or len(uncovered_functions_name_list) == 0:
             uncovered_function = {
-                'name': None,
+                'functionName': None,
                 'note': None,
                 'uncoverages': [],
                 'uncoverageCount': 0
             }
             uncovered_function['note'] = info[0]
-            uncovered_function['name'] = info[2]
+            uncovered_function['functionName'] = info[2]
             uncovered_function['uncoverages'].append(uncoverage)
             uncovered_function['uncoverageCount'] = uncovered_function['uncoverageCount'] + 1
             total_uncoverage = total_uncoverage + 1
-            uncovered_functions_name_list.append(uncovered_function['name'])
+            uncovered_functions_name_list.append(uncovered_function['functionName'])
             # see if info a new module line
             if info[1] not in uncovered_modules_name_list or len(uncovered_modules) == 0:
                 uncovered_module = {
-                    'name': None,
+                    'moduleName': None,
                     'functions': []
                 }
                 uncovered_module['process'] = info[0]
-                uncovered_module['name'] = info[1]
+                uncovered_module['moduleName'] = info[1]
                 uncovered_module['functions'].append(uncovered_function)
                 uncovered_modules.append(uncovered_module)
-                uncovered_modules_name_list.append(uncovered_module['name'])
+                uncovered_modules_name_list.append(uncovered_module['moduleName'])
             # in case module already exist, add function to corresponding module
             else: 
                 for index, moduleName in enumerate(uncovered_modules_name_list):
-                    if moduleName == str(uncovered_module['name']):
+                    if moduleName == str(uncovered_module['moduleName']):
                         (uncovered_modules[index])['functions'].append(uncovered_function)
         else: # in case function already exist, add uncoverage information to corresponding function in corresponding module
             for i, moduleName in enumerate(uncovered_modules_name_list):
                 if moduleName == info[1]:
                     for j, uncovered_function in enumerate((uncovered_modules[i])['functions']):
-                        if info[2] == uncovered_function['name']:
+                        if info[2] == uncovered_function['functionName']:
                             (uncovered_modules[i])['functions'][j]['uncoverages'].append(uncoverage)
                             (uncovered_modules[i])['functions'][j]['uncoverageCount'] = (uncovered_modules[i])['functions'][j]['uncoverageCount'] + 1
                             total_uncoverage = total_uncoverage + 1
@@ -249,7 +249,7 @@ def read_exceptions(testExceptionSheet, rows):
 
 def read_SCGA(app, scga_path):
     SCGA = {
-        'sheetName': os.path.basename(scga_path),
+        'SCGAName': os.path.basename(scga_path),
         'baseLine': str(os.path.basename(scga_path)).split('_SCGA')[0],
         'levelATest': {},
         'levelBTest': {},
@@ -328,8 +328,12 @@ def read_SCGAs(app, scga_root_path):
                 scga_log_f.flush()
                 SCGA, scga_function_list= read_SCGA(app, os.path.join(root, scga_f))
                 SCGAs.append(SCGA)
-                json.dump(SCGA, scga_json, indent=4, default=str)
-                pickle.dump(SCGA, scga_pickle, protocol=pickle.HIGHEST_PROTOCOL)
+                # json.dump(SCGA, scga_json, indent=4, default=str)
+                # scga_json.flush()
+                # scga_json.seek(0, 2)
+                # pickle.dump(SCGA, scga_pickle, protocol=pickle.HIGHEST_PROTOCOL)
+                # scga_pickle.flush()
+                # scga_pickle.seek(0, 2)
                 all_scga_function_list.append(scga_function_list)
                 # point to file end
                 scga_log_f.seek(0, 2)
@@ -337,6 +341,8 @@ def read_SCGAs(app, scga_root_path):
                 output_log(f'extraction done !')
                 output_log(f'='*80)
                 print()
+        json.dump(SCGAs, scga_json, indent=4, default=str)
+        pickle.dump(SCGAs, scga_pickle, protocol=pickle.HIGHEST_PROTOCOL)
     return SCGAs, all_scga_function_list
 
 def generate_alphabet_list(n):
@@ -368,8 +374,83 @@ def output_as_db():
 def read_db():
     pass
 
-def search_func(str_):
-    pass
+def search_function_in_list(scga_list, search_func):
+    for funcIdx, item in enumerate(scga_list):
+        if item.get('functionName') == search_func:
+            return funcIdx, item
+    return None
+
+def search_function_in_nested_scga(scga_dict, search_func, path=None):
+    if path is None:
+        path = []
+    if isinstance(scga_dict, dict):
+        for key, value in scga_dict.items():
+            cur_path = path + [key]
+            # if key == 'functionName':
+            #     if value == search_func:
+            #         return value, cur_path
+            # # find function dict
+            # elif isinstance(value, dict):
+            if isinstance(value, dict):
+                result = search_function_in_nested_scga(value, search_func, cur_path)
+                if result is not None:
+                    return result
+            # find ['modules'] and ['functions] list
+            elif isinstance(value, list) and (key == 'modules'):
+                for modIdx, item in enumerate(value):
+                    res = search_function_in_list(item.get('functions'), search_func)
+                    if res: 
+                        funcIdx, func = res
+                        return func, cur_path, modIdx, funcIdx
+    return None
+
+def get_output_str(scga_dict, res):
+    value, path, modIdx, funcIdx = res
+    # str_ = str_ + ' -> '.join(path)
+    mods = scga_dict
+    for p in path:
+        mods = mods.get(p)
+    mod = mods[modIdx]
+    output_str =  f"\t* {scga_dict.get('SCGAName')} -> {mod.get('moduleName')}\n"
+    return output_str
+
+def search_func(pklFilePath, funcStr):
+    # deserializer scga pickle file
+    result = None
+    output_str = None
+    try:
+        scga_pickle_path = os.path.join(pklFilePath + r'\scgas.pkl')
+        with open(scga_pickle_path, 'rb') as scga_pkl:
+            deserialized_scga_data = pickle.load(scga_pkl)
+            if isinstance(deserialized_scga_data, list):
+                result = []
+                for index, scga_dict in enumerate(deserialized_scga_data):
+                    res = search_function_in_nested_scga(scga_dict, funcStr)
+                    if res:
+                        if output_str is None:
+                            output_str = get_output_str(scga_dict, res)
+                        else:
+                            output_str = output_str + get_output_str(scga_dict, res)
+                        result.append(res)
+            elif isinstance(deserialized_scga_data, dict):
+                result = search_function_in_nested_scga(deserialized_scga_data, funcStr)
+                if result:
+                    output_str = get_output_str(scga_dict, res)
+            print(f"Found function '{funcStr}' at path:\n {output_str}")
+    except FileNotFoundError:
+        print(f'The file {scga_pkl} does not exist, you may need to extract new SCGA data group first')
+    except pickle.UnpicklingError:
+        print(f"Error unpickling the file {scga_pkl}.")
+        print(traceback.print_exc())
+    except Exception as e:
+         print(f"An unexpected error occurred: {e}")
+         print(traceback.print_exc())
+    
+# def output_search_result(res, scgadict):
+#     if isinstance(res, list):
+#         for idx, item in enumerate(res):
+#             print(f"Found key '{deserialized_scga_data}' with value '{value}' at path {' -> '.join(path)}")
+#     else
 
 scga_log_f = None
 scga_json = None
@@ -385,38 +466,50 @@ def main():
         "Choose your operation: ")
     print(f'='*80)
     global scga_log
-    if int(selection) == 1 or int(selection) == 2:
-        SCGAs = []
-        rootPath = input("Please enter the root path: ")
-        excelApp = xw.App(visible=False, add_book=False)
-        while not os.path.isdir(rootPath):
-            rootPath = input("Can not found this location, please enter the root path again: ")
-        else:
-            try:
-                scga_log_path = os.path.join(rootPath + r'\scga_log.txt')
-                scgas_json_path = os.path.join(rootPath + r'\scgas.json')
-                scga_pickle_path = os.path.join(rootPath + r'\scgas.pkl')
-                if int(selection) == 1:
-                    scga_log_f = open(scga_log_path, 'w', encoding='UTF-8')
-                    scga_json = open(scgas_json_path, 'w', encoding='UTF-8')
-                    scga_pickle = open(scga_pickle_path, 'wb')
-                else:
-                    scga_log_f = open(scga_log_path, 'a', encoding='UTF-8')
-                    scgas_json_path = open(scgas_json_path, 'a', encoding='UTF-8')
-                    scga_pickle = open(scga_pickle_path, 'ab')
-                SCGAs, all_scga_function_list = read_SCGAs(excelApp, rootPath)
-                output_all_functions_as_sheet(rootPath, all_scga_function_list)
-            except BaseException as err:
-                # print(repr(keyerr))
-                print(traceback.print_exc())
-            finally:
-                excelApp.quit()
-                scga_log_f.close()
-                scga_json.close()
-    elif int(selection) == 3:
-        func = input("Input the function name: ")
-        search_func(func)
-        
+    while not(int(selection) == 1 or int(selection) == 2 or int(selection) == 3):
+        print("Wrong selection..")
+        selection = input(
+            "\t1. Extract new SCGA data group\n" + \
+            "\t2. Add new SCGA data group\n" + \
+            "\t3. Search function from existing SCGA data group\n" + \
+            "Choose your operation: ")
+    else:
+        if int(selection) == 1 or int(selection) == 2:
+            SCGAs = []
+            rootPath = input("Please enter the root path: ")
+            excelApp = xw.App(visible=False, add_book=False)
+            while not os.path.isdir(rootPath):
+                rootPath = input("Can not found this location, please enter the root path again: ")
+            else:
+                try:
+                    scga_log_path = os.path.join(rootPath + r'\scga_log.txt')
+                    scgas_json_path = os.path.join(rootPath + r'\scgas.json')
+                    scga_pickle_path = os.path.join(rootPath + r'\scgas.pkl')
+                    if int(selection) == 1:
+                        scga_log_f = open(scga_log_path, 'w', encoding='UTF-8')
+                        scga_json = open(scgas_json_path, 'w', encoding='UTF-8')
+                        scga_pickle = open(scga_pickle_path, 'wb')
+                    else:
+                        scga_log_f = open(scga_log_path, 'a', encoding='UTF-8')
+                        scgas_json_path = open(scgas_json_path, 'a', encoding='UTF-8')
+                        scga_pickle = open(scga_pickle_path, 'ab')
+                    SCGAs, all_scga_function_list = read_SCGAs(excelApp, rootPath)
+                    output_all_functions_as_sheet(rootPath, all_scga_function_list)
+                except Exception as err:
+                    # print(repr(keyerr))
+                    print(traceback.print_exc())
+                finally:
+                    excelApp.quit()
+                    scga_log_f.close()
+                    scga_json.close()
+                    scga_pickle.close()
+        elif int(selection) == 3:
+            rootPath = input("Please enter the root path of pickle file: ")
+            while not os.path.isdir(rootPath):
+                rootPath = input("Can not found this location, please enter the root path again: ")
+            else:
+                func = input("Input the function name: ")
+                search_func(rootPath, func)
 
 
 if __name__ == '__main__':
