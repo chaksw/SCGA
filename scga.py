@@ -328,12 +328,7 @@ def read_SCGAs(app, scga_root_path):
                 scga_log_f.flush()
                 SCGA, scga_function_list= read_SCGA(app, os.path.join(root, scga_f))
                 SCGAs.append(SCGA)
-                # json.dump(SCGA, scga_json, indent=4, default=str)
-                # scga_json.flush()
-                # scga_json.seek(0, 2)
-                # pickle.dump(SCGA, scga_pickle, protocol=pickle.HIGHEST_PROTOCOL)
-                # scga_pickle.flush()
-                # scga_pickle.seek(0, 2)
+                
                 all_scga_function_list.append(scga_function_list)
                 # point to file end
                 scga_log_f.seek(0, 2)
@@ -359,8 +354,6 @@ def output_all_functions_as_sheet(rootPath, scgaList):
     column_range = generate_alphabet_list(len(scgaList))
     for idx, value in enumerate(scgaList):
         start_pos = f'{column_range[idx]}2'
-        # end_pos = f'{column_range[idx]}' + str(len(value['levelAFunctions']) + 1)
-        # range_ = start_pos + ':' + end_pos
         ws.range(f'{column_range[idx]}1').value = value['baseLine']
         ws.range(start_pos).options(transpose=True).value = value['levelAFunctions']
         
@@ -386,11 +379,6 @@ def search_function_in_nested_scga(scga_dict, search_func, path=None):
     if isinstance(scga_dict, dict):
         for key, value in scga_dict.items():
             cur_path = path + [key]
-            # if key == 'functionName':
-            #     if value == search_func:
-            #         return value, cur_path
-            # # find function dict
-            # elif isinstance(value, dict):
             if isinstance(value, dict):
                 result = search_function_in_nested_scga(value, search_func, cur_path)
                 if result is not None:
@@ -406,7 +394,6 @@ def search_function_in_nested_scga(scga_dict, search_func, path=None):
 
 def get_output_str(scga_dict, res):
     value, path, modIdx, funcIdx = res
-    # str_ = str_ + ' -> '.join(path)
     mods = scga_dict
     for p in path:
         mods = mods.get(p)
@@ -445,12 +432,6 @@ def search_func(pklFilePath, funcStr):
     except Exception as e:
          print(f"An unexpected error occurred: {e}")
          print(traceback.print_exc())
-    
-# def output_search_result(res, scgadict):
-#     if isinstance(res, list):
-#         for idx, item in enumerate(res):
-#             print(f"Found key '{deserialized_scga_data}' with value '{value}' at path {' -> '.join(path)}")
-#     else
 
 scga_log_f = None
 scga_json = None
