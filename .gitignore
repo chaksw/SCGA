@@ -1,4 +1,4 @@
-testExcel/*
+SCGAs/*
 .vscode/*
 # do not trace any __pychache__ files
 __pycache__/
