@@ -3,3 +3,4 @@ xlwings>=0.31.4
 django>=4.2.2
 djangorestframework>=3.14.0
 django-cors-headers>=4.2.0
+djoser
