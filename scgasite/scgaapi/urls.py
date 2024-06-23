@@ -1,8 +1,13 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import ScgaViewSet, TestPlanViewSet, TestExceptionViewSet
+
+router = DefaultRouter()
+router.register(r"scgas", ScgaViewSet, basename="scgas")
+# router.register(r"levels", LevelViewSet, basename="levels")
+router.register(r"testplans", TestPlanViewSet, basename="testplans")
+router.register(r"testexceptions", TestExceptionViewSet, basename="testexceptions")
 
 urlpatterns = [
-    path("scgas/", views.ScgaListCreate.as_view(), name='scga-view-create'),
-    path("scgas/<int:pk>/", views.ScgaRetrieveUpdateDestroy.as_view(),
-         name='scga-view-update')
+    path("", include(router.urls))
 ]

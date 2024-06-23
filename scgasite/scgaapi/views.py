@@ -1,25 +1,112 @@
 from django.shortcuts import render
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets, filters
 from rest_framework.response import Response
-from .models import Scga
-from .serializers import ScgaSerializer
+from rest_framework.pagination import PageNumberPagination
+from .models import Scga, TestPlan, TestException
+from .serializers import ScgaSerializer, TestPlanSerializer, TestExceptionSerializer
 from rest_framework.views import APIView
 # Create your views here.
 
 
-class ScgaListCreate(generics.ListCreateAPIView):
+class ScgaViewSet(viewsets.ModelViewSet):
+    queryset = Scga.objects.all()
+    serializer_class = ScgaSerializer
+
+
+# class LevelViewSet(viewsets.ModelViewSet):
+#     # query is all the object of scga
+#     queryset = Level.objects.all()
+#     serializer_class = LevelSerializer
+
+
+class TestPlanViewSet(viewsets.ModelViewSet):
     # query is all the object of scga
-    queryset = Scga.objects.all()
-    serializer_class = ScgaSerializer
+    queryset = TestPlan.objects.all()
+    serializer_class = TestPlanSerializer
 
-    # override http methode delete()
-    def delete(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        queryset.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def create(self, request, *args, **kwargs):
+        # 添加调试日志
+        print("Received data:", request.data)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        print('get there')
+        print(serializer)
+        serializer.save()
 
 
-class ScgaRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Scga.objects.all()
-    serializer_class = ScgaSerializer
-    lookup_field = 'pk'  # primary key
+class TestExceptionViewSet(viewsets.ModelViewSet):
+    queryset = TestException.objects.all()
+    serializer_class = TestExceptionSerializer
+
+    def create(self, request, *args, **kwargs):
+        # 添加调试日志
+        print("Received data:", request.data)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+
+# class ScgaListCreate(generics.ListCreateAPIView):
+#     # query is all the object of scga
+#     queryset = Scga.objects.all()
+#     serializer_class = ScgaSerializer
+
+#     # override http methode delete()
+#     def delete(self, request, *args, **kwargs):
+#         queryset = self.get_queryset()
+#         queryset.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# class ScgaRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Scga.objects.all()
+#     serializer_class = ScgaSerializer
+#     lookup_field = 'pk'  # primary key
+
+# class TestPlanListCreate(generics.ListCreateAPIView):
+#     # query is all the object of scga
+#     queryset = TestPlan.objects.all()
+#     serializer_class = TestPlanSerializer
+
+#     # override http methode delete()
+#     def delete(self, request, *args, **kwargs):
+#         queryset = self.get_queryset()
+#         queryset.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# class TestPlanRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = TestPlan.objects.all()
+#     serializer_class = TestPlanSerializer
+#     lookup_field = 'pk'  # primary key
+
+
+# class TestExceptionListCreate(generics.ListCreateAPIView):
+#     # query is all the object of scga
+#     queryset = TestException.objects.all()
+#     serializer_class = TestExceptionSerializer
+
+#     # override http methode delete()
+#     def delete(self, request, *args, **kwargs):
+#         queryset = self.get_queryset()
+#         queryset.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# class TestExceptionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = TestException.objects.all()
+#     serializer_class = TestExceptionSerializer
+#     lookup_field = 'pk'  # primary key
