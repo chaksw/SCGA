@@ -30,13 +30,19 @@ class TestPlanViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
+        try:
+            self.perform_create(serializer)
+        except Exception as e:
+            print(f"Error while save test plan data: {e}")
+            return Response({"error detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        print('get there2')
+        for test_plan in TestPlan.objects.all():
+            print(test_plan.sheet_name)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        print('get there')
-        print(serializer)
+        print('get there1')
         serializer.save()
 
 

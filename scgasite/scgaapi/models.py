@@ -5,24 +5,23 @@ from decimal import Decimal
 
 PRECENTAGE_VALIDATOR = [MinValueValidator(0), MaxValueValidator(100)]
 
-YES = 'yes'
-NO = 'no'
-NULL = ''
+YES = 'Y'
+NO = 'N'
+NULL = 'NA'
 CHOICES_YN = (
     (YES, 'Y'),
     (NO, 'N'),
-    (NULL, 'Null'),
+    (NULL, 'NA'),
 )
 # level
-A = 'a'
-B = 'b'
-C = 'c'
-UNKOWN = 'unkown'
+A = 'A'
+B = 'B'
+C = 'C'
 CHOICES_LEVEL = (
     (A, 'A'),
     (B, 'B'),
     (C, 'C'),
-    (UNKOWN, 'Unknown'),
+    (NULL, 'NA'),
 )
 
 # scga class
@@ -41,6 +40,7 @@ CHOICES_CLASS = (
     (TEST_ENVIRONMENT_LIMITATIONS, "Test Environment Limitations"),
     (PREVIOUSLY_ANALYZED_SOFTWARE, "Previously Analyzed Software"),
     (OTHER, "Other"),
+    (NULL, 'NA'),
 )
 
 
@@ -53,7 +53,7 @@ class Scga(models.Model):
 
 
 # class Level(models.Model):
-#     level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=UNKOWN)
+#     level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 #     scga_file = models.ForeignKey(Scga, to_field="id", related_name="levels",
 #                                   null=True, blank=True, on_delete=models.CASCADE)
 
@@ -69,7 +69,7 @@ class TestPlan(models.Model):
     sheet_name = models.CharField(max_length=255)
     # level = models.OneToOneField(Level, to_field="id", related_name="test_plan",
     #                              null=True, blank=True, on_delete=models.CASCADE)
-    level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=UNKOWN)
+    level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 
     def __str__(self):
         self.sheet_name
@@ -83,7 +83,7 @@ class TestException(models.Model):
     sheet_name = models.CharField(max_length=255)
     # level = models.OneToOneField(Level, to_field="id", related_name="test_exception",
     #                              null=True, blank=True, on_delete=models.CASCADE)
-    level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=UNKOWN)
+    level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 
     def __str__(self):
         self.sheet_name
@@ -175,7 +175,7 @@ class Uncoverage(models.Model):
     uncovered_sw_line = models.IntegerField()
     uncovered_instrument_sw_line = models.TextField(default='')
     requirement_id = models.CharField(max_length=255)
-    _class = models.CharField(max_length=255, choices=CHOICES_CLASS, default='')
+    _class = models.CharField(max_length=255, choices=CHOICES_CLASS, default=NULL)
     analysis_summary = models.CharField(max_length=255, default='')
     correction_summary = models.CharField(max_length=255, default='')
     issue = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL)

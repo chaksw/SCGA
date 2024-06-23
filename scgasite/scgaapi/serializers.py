@@ -2,25 +2,25 @@ from rest_framework import serializers
 from .models import Scga, TestPlan, TestException, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
 
 
-class TestPlanSerializer(serializers.Serializer):
+class TestPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestPlan
         fields = (
             'id',
-            'scga_file'
+            'scga_file',
             'sheet_name',
             'level'
         )
 
 
-class TestExceptionSerializer(serializers.Serializer):
+class TestExceptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = TestException
         fields = (
             'id',
-            'scga_file'
+            'scga_file',
             'sheet_name',
-            'level'
+            'level',
         )
 
 
