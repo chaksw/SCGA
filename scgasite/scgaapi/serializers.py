@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Scga, TestPlan, TestException, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
+from .models import Scga, Level, TestPlan, TestException, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
 
 
 class TestPlanSerializer(serializers.ModelSerializer):
@@ -24,25 +24,25 @@ class TestExceptionSerializer(serializers.ModelSerializer):
         )
 
 
-# class LevelSerializer(serializers.Serializer):
-#     test_plan = TestPlanSerializer(read_only=True)
-#     test_exception = TestExceptionSerializer(read_only=True)
+class LevelSerializer(serializers.ModelSerializer):
+    test_plans = TestPlanSerializer(many=True)
+    test_exceptions = TestExceptionSerializer(many=True)
 
-#     class Meta:
-#         model = Level
-#         fields = (
-#             'id'
-#             'level',
-#             'test_plan',
-#             'test_exception'
-#         )
+    class Meta:
+        model = Level
+        fields = (
+            'id',
+            'level',
+            'test_plans',
+            'test_exceptions'
+        )
 
 
 class ScgaSerializer(serializers.ModelSerializer):
-    # levels = LevelSerializer(many=True, read_only=True)
     # The `.create()` method does not support writable nested fields by default.
-    test_plans = TestPlanSerializer(many=True, read_only=True)
-    test_exceptions = TestExceptionSerializer(many=True, read_only=True)
+    levels = LevelSerializer(many=True)
+    # test_plans = TestPlanSerializer(many=True)
+    # test_exceptions = TestExceptionSerializer(many=True)
 
     class Meta:
         model = Scga
@@ -50,7 +50,7 @@ class ScgaSerializer(serializers.ModelSerializer):
             'id',
             'file_name',
             'baseline',
-            # 'levels',
-            'test_plans',
-            'test_exceptions'
+            'levels',
+            # 'test_plans',
+            # 'test_exceptions'
         )

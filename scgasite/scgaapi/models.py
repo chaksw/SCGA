@@ -52,24 +52,24 @@ class Scga(models.Model):
         return self.file_name
 
 
-# class Level(models.Model):
-#     level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
-#     scga_file = models.ForeignKey(Scga, to_field="id", related_name="levels",
-#                                   null=True, blank=True, on_delete=models.CASCADE)
+class Level(models.Model):
+    level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
+    scga_file = models.ForeignKey(Scga, to_field="id", related_name="levels",
+                                  null=True, blank=True, on_delete=models.CASCADE)
 
-#     def __str__(self):
-#         return self.level
+    def __str__(self):
+        return self.level
 
 
 class TestPlan(models.Model):
     # main table scga file
     # related_name is the field name that should be defined in serializer
-    scga_file = models.ForeignKey(Scga, to_field="file_name", related_name="test_plans",
-                                  null=True, blank=True, on_delete=models.CASCADE)
+    # scga_file = models.ForeignKey(Scga, to_field="file_name", related_name="test_plans",
+    #   null=True, blank=True, on_delete=models.CASCADE)
     sheet_name = models.CharField(max_length=255)
-    # level = models.OneToOneField(Level, to_field="id", related_name="test_plan",
-    #                              null=True, blank=True, on_delete=models.CASCADE)
-    level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
+    level = models.OneToOneField(Level, to_field="id", related_name="test_plans",
+                                 null=True, blank=True, on_delete=models.CASCADE)
+    # level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 
     def __str__(self):
         self.sheet_name
@@ -78,12 +78,12 @@ class TestPlan(models.Model):
 class TestException(models.Model):
     # main table scga file
     # related_name is the field name that should be defined in serializer
-    scga_file = models.ForeignKey(Scga, to_field="file_name", related_name="test_exceptions",
-                                  null=True, blank=True, on_delete=models.CASCADE)
+    # scga_file = models.ForeignKey(Scga, to_field="file_name", related_name="test_exceptions",
+    #   null=True, blank=True, on_delete=models.CASCADE)
     sheet_name = models.CharField(max_length=255)
-    # level = models.OneToOneField(Level, to_field="id", related_name="test_exception",
-    #                              null=True, blank=True, on_delete=models.CASCADE)
-    level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
+    level = models.OneToOneField(Level, to_field="id", related_name="test_exceptions",
+                                 null=True, blank=True, on_delete=models.CASCADE)
+    # level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 
     def __str__(self):
         self.sheet_name

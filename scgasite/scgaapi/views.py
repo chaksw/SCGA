@@ -2,8 +2,8 @@ from django.shortcuts import render
 from rest_framework import generics, status, viewsets, filters
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from .models import Scga, TestPlan, TestException
-from .serializers import ScgaSerializer, TestPlanSerializer, TestExceptionSerializer
+from .models import Scga, Level, TestPlan, TestException
+from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, TestExceptionSerializer
 from rest_framework.views import APIView
 # Create your views here.
 
@@ -13,10 +13,10 @@ class ScgaViewSet(viewsets.ModelViewSet):
     serializer_class = ScgaSerializer
 
 
-# class LevelViewSet(viewsets.ModelViewSet):
-#     # query is all the object of scga
-#     queryset = Level.objects.all()
-#     serializer_class = LevelSerializer
+class LevelViewSet(viewsets.ModelViewSet):
+    # query is all the object of scga
+    queryset = Level.objects.all()
+    serializer_class = LevelSerializer
 
 
 class TestPlanViewSet(viewsets.ModelViewSet):
