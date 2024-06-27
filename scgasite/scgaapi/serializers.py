@@ -1,19 +1,138 @@
 from rest_framework import serializers
-from .models import Scga, Level, TestPlan, TestException, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
+from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
 
+
+class UncoverageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Uncoverage
+        fields = (
+            'id',
+            'function'
+            'uncovered_sw_line',
+            'uncovered_instrument_sw_line',
+            'requirement_id',
+            '_class',
+            'analysis_summary',
+            'correction_summary',
+            'issue',
+            'PAR_SCR',
+            'comment',
+        )
+
+
+class DefectClassificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DefectClassification
+        fields = (
+            'id',
+            'tech',
+            'non_tech',
+            'process',
+            'function'
+        )
+
+class totalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = total
+        fields = (
+            'id',
+            'branches',
+            'pairs',
+            'statement',
+            'function',
+        )
+
+class CoveredSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Covered
+        fields = (
+            'id',
+            'branches',
+            'pairs',
+            'statement',
+            'function',
+        )
+
+class CoverageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Coverage
+        fields = (
+            'id',
+            'percent_coverage_MCDC',
+            'percent_coverage_Analysis',
+            'total_coverage',
+            'function',
+        )
+
+
+
+class SCGAFunctionSerializer(serializers.ModelSerializer):
+    coverage = CoverageSerializer()
+    covered = CoveredSerializer()
+    total = totalSerializer()
+    defect_classification = DefectClassificationSerializer()
+    uncoverages = UncoverageSerializer(many=True)
+    class Meta:
+        model = SCGAFunction
+        fields = (
+            'id',
+            'module',
+            'function_name',
+            'analyst',
+            'site',
+            'start_date',
+            'coverage',
+            'covered',
+            'total',
+            'oversight',
+            'defect_classification',
+            'note',
+            'uncoverages',
+            'uncoverage_count',
+        )
+
+class SCGAModuleSerializer(serializers.ModelSerializer):
+    functions = SCGAFunctionSerializer(many=True)
+    class Meta:
+        model = SCGAModule
+        fields = (
+            'id',
+            'test_plan',
+            'test_exception',
+            'module_name',
+            'functions',
+            'process',
+        )
+
+class LvTotalCoverageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LvTotalCoverage
+        fields = (
+            'id',
+            'percent_coverage_MCDC',
+            'percent_coverage_Analysis',
+            'total_coverage',
+            'test_plan',
+        )
 
 class TestPlanSerializer(serializers.ModelSerializer):
+    modules = SCGAModuleSerializer(many=True)
+    lv_total_coverage = LvTotalCoverageSerializer()
     class Meta:
         model = TestPlan
         fields = (
             'id',
             # 'scga_file',
             'sheet_name',
-            'level'
+            'level',
+            'modules',
+            'lv_total_coverage'
         )
 
 
 class TestExceptionSerializer(serializers.ModelSerializer):
+    modules = SCGAModuleSerializer(many=True)
+
     class Meta:
         model = TestException
         fields = (
@@ -21,6 +140,7 @@ class TestExceptionSerializer(serializers.ModelSerializer):
             # 'scga_file',
             'sheet_name',
             'level',
+            'modules'
         )
 
 

@@ -9,19 +9,19 @@ YES = 'Y'
 NO = 'N'
 NULL = 'NA'
 CHOICES_YN = (
+    (NULL, 'NA'),
     (YES, 'Y'),
     (NO, 'N'),
-    (NULL, 'NA'),
 )
 # level
 A = 'A'
 B = 'B'
 C = 'C'
 CHOICES_LEVEL = (
+    (NULL, 'NA'),
     (A, 'A'),
     (B, 'B'),
     (C, 'C'),
-    (NULL, 'NA'),
 )
 
 # scga class
@@ -33,6 +33,7 @@ TEST_ENVIRONMENT_LIMITATIONS = "test environment limitations"
 PREVIOUSLY_ANALYZED_SOFTWARE = "previously analyzed software"
 OTHER = "other"
 CHOICES_CLASS = (
+    (NULL, 'NA'),
     (INCOMPLETE_TESTS, "Incomplete Tests"),
     (REQUIREMENTS_CODE_MISMATCH, "Requirements-Code Mismatch"),
     (DEACTIVATED_CODE, "Deactivated Code"),
@@ -40,7 +41,6 @@ CHOICES_CLASS = (
     (TEST_ENVIRONMENT_LIMITATIONS, "Test Environment Limitations"),
     (PREVIOUSLY_ANALYZED_SOFTWARE, "Previously Analyzed Software"),
     (OTHER, "Other"),
-    (NULL, 'NA'),
 )
 
 
@@ -172,6 +172,8 @@ class DefectClassification(models.Model):
 
 
 class Uncoverage(models.Model):
+    function = models.ForeignKey(SCGAFunction, to_field="id", related_name="uncoverages",
+                                 null=True, blank=True, on_delete=models.CASCADE)
     uncovered_sw_line = models.IntegerField()
     uncovered_instrument_sw_line = models.TextField(default='')
     requirement_id = models.CharField(max_length=255)
@@ -182,5 +184,4 @@ class Uncoverage(models.Model):
     # applicable
     PAR_SCR = models.CharField(max_length=255, default='N/A')
     comment = models.CharField(max_length=255, default='')
-    function = models.ForeignKey(SCGAFunction, to_field="id", related_name="uncoverage",
-                                 null=True, blank=True, on_delete=models.CASCADE)
+    

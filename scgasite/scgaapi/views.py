@@ -2,8 +2,8 @@ from django.shortcuts import render
 from rest_framework import generics, status, viewsets, filters
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from .models import Scga, Level, TestPlan, TestException
-from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, TestExceptionSerializer
+from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
+from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, TestExceptionSerializer, LvTotalCoverageSerializer, SCGAModuleSerializer, SCGAFunctionSerializer, CoverageSerializer, CoveredSerializer, totalSerializer, DefectClassificationSerializer, UncoverageSerializer
 from rest_framework.views import APIView
 # Create your views here.
 
@@ -35,14 +35,12 @@ class TestPlanViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(f"Error while save test plan data: {e}")
             return Response({"error detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        print('get there2')
         for test_plan in TestPlan.objects.all():
             print(test_plan.sheet_name)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        print('get there1')
         serializer.save()
 
 
@@ -63,6 +61,41 @@ class TestExceptionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
+
+
+class LvTotalCoverageViewSet(viewsets.ModelViewSet):
+    queryset = LvTotalCoverage.objects.all()
+    serializer_class = LvTotalCoverageSerializer
+
+class SCGAModuleViewSet(viewsets.ModelViewSet):
+    queryset = SCGAModule.objects.all()
+    serializer_class = SCGAModuleSerializer
+
+
+class SCGAFunctionViewSet(viewsets.ModelViewSet):
+    queryset = SCGAFunction.objects.all()
+    serializer_class = SCGAFunctionSerializer
+
+class CoverageViewSet(viewsets.ModelViewSet):
+    queryset = Coverage.objects.all()
+    serializer_class = CoverageSerializer
+
+
+class CoveredViewSet(viewsets.ModelViewSet):
+    queryset = Covered.objects.all()
+    serializer_class = CoveredSerializer
+
+class totalViewSet(viewsets.ModelViewSet):
+    queryset = total.objects.all()
+    serializer_class = totalSerializer
+
+class DefectClassificationViewSet(viewsets.ModelViewSet):
+    queryset = DefectClassification.objects.all()
+    serializer_class = DefectClassificationSerializer
+
+class UncoverageViewSet(viewsets.ModelViewSet):
+    queryset = Uncoverage.objects.all()
+    serializer_class = UncoverageSerializer
 
 
 # class ScgaListCreate(generics.ListCreateAPIView):
