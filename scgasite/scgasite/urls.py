@@ -17,5 +17,6 @@ Including another URLconf
 from django.urls import path, include
 
 urlpatterns = [
-    path('', include('scgaapi.urls'))
+    path('', include('scgaapi.urls')),
+    # path("__debug__/", include("debug_toolbar.urls")),
 ]

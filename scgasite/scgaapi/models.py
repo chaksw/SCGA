@@ -67,7 +67,7 @@ class TestPlan(models.Model):
     # scga_file = models.ForeignKey(Scga, to_field="file_name", related_name="test_plans",
     #   null=True, blank=True, on_delete=models.CASCADE)
     sheet_name = models.CharField(max_length=255)
-    level = models.OneToOneField(Level, to_field="id", related_name="test_plans",
+    level = models.OneToOneField(Level, to_field="id", related_name="test_plan",
                                  null=True, blank=True, on_delete=models.CASCADE)
     # level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 
@@ -81,7 +81,7 @@ class TestException(models.Model):
     # scga_file = models.ForeignKey(Scga, to_field="file_name", related_name="test_exceptions",
     #   null=True, blank=True, on_delete=models.CASCADE)
     sheet_name = models.CharField(max_length=255)
-    level = models.OneToOneField(Level, to_field="id", related_name="test_exceptions",
+    level = models.OneToOneField(Level, to_field="id", related_name="test_exception",
                                  null=True, blank=True, on_delete=models.CASCADE)
     # level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 
