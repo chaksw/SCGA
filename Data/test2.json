@@ -1,0 +1,33 @@
+{
+    "file_name": "EDSGGF_GS_GCOM_00_002_SCGA.xlsm",
+    "baseline": "EDSGGF_GS_GCOM_00_002",
+    "levels": [
+        {
+            "level": "A",
+            "test_plan": {
+                "sheet_name": "Level A Test Plan"
+            },
+            "test_exception": {
+                "sheet_name": "Level A Test Exception"
+            }
+        },
+        {
+            "level": "B",
+            "test_plan": {
+                "sheet_name": "Level B Test Plan"
+            },
+            "test_exception": {
+                "sheet_name": "Level B Test Exception"
+            }
+        },
+        {
+            "level": "C",
+            "test_plan": {
+                "sheet_name": "Level C Test Plan"
+            },
+            "test_exception": {
+                "sheet_name": "Level C Test Exception"
+            }
+        }
+    ]
+}
