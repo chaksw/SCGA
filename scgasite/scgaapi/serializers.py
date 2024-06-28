@@ -7,7 +7,7 @@ class UncoverageSerializer(serializers.ModelSerializer):
         model = Uncoverage
         fields = (
             'id',
-            'function'
+            'function',
             'uncovered_sw_line',
             'uncovered_instrument_sw_line',
             'requirement_id',
@@ -25,10 +25,10 @@ class DefectClassificationSerializer(serializers.ModelSerializer):
         model = DefectClassification
         fields = (
             'id',
+            'function',
             'tech',
             'non_tech',
             'process',
-            'function'
         )
 
 
@@ -37,10 +37,10 @@ class totalSerializer(serializers.ModelSerializer):
         model = total
         fields = (
             'id',
+            'function',
             'branches',
             'pairs',
             'statement',
-            'function',
         )
 
 
@@ -49,10 +49,10 @@ class CoveredSerializer(serializers.ModelSerializer):
         model = Covered
         fields = (
             'id',
+            'function',
             'branches',
             'pairs',
             'statement',
-            'function',
         )
 
 
@@ -61,10 +61,10 @@ class CoverageSerializer(serializers.ModelSerializer):
         model = Coverage
         fields = (
             'id',
+            'function',
             'percent_coverage_MCDC',
             'percent_coverage_Analysis',
             'total_coverage',
-            'function',
         )
 
 
@@ -160,10 +160,10 @@ class LvTotalCoverageSerializer(serializers.ModelSerializer):
         model = LvTotalCoverage
         fields = (
             'id',
+            'test_plan',
             'percent_coverage_MCDC',
             'percent_coverage_Analysis',
             'total_coverage',
-            'test_plan',
         )
 
 

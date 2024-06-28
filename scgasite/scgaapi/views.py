@@ -5,6 +5,8 @@ from rest_framework.pagination import PageNumberPagination
 from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
 from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, TestExceptionSerializer, LvTotalCoverageSerializer, SCGAModuleSerializer, SCGAFunctionSerializer, CoverageSerializer, CoveredSerializer, totalSerializer, DefectClassificationSerializer, UncoverageSerializer
 from rest_framework.views import APIView
+from django.core.files.uploadedfile import UploadedFile
+import pickle
 # Create your views here.
 
 
@@ -97,6 +99,37 @@ class UncoverageViewSet(viewsets.ModelViewSet):
     queryset = Uncoverage.objects.all()
     serializer_class = UncoverageSerializer
 
+
+class UploadSCGADataView(APIView):
+    def post(self, request, *args, **kwargs):
+        file = request.FILES.get('file')
+        if not file or not isinstance(file, UploadedFile):
+            return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not file.name.endwith('.pkl'):
+            return Response({"detail": "Invalid file format. Please upload a .pkl file."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # load data from .pkl file
+            data = pickle.load(file)
+            if isinstance(data, list):
+                if not all(isinstance(item, dict) for item in data):
+                    return Response({"detail": "Invalid data format. Excepted a list of dictrionaries."}, status=status.HTTP_400_BAD_REQUEST)
+                for item in data:
+                    serializer = ScgaSerializer(data=item)
+                    if serializer.is_valid():
+                        serializer.save()
+                    else:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': "SCGAs uploaded successfully"}, status=status.HTTP_201_CREATED)
+            elif isinstance(data, dict):
+                serializer = ScgaSerializer(data=item)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # class ScgaListCreate(generics.ListCreateAPIView):
 #     # query is all the object of scga

@@ -5,9 +5,10 @@ import traceback
 import json
 import pickle
 import datetime
+from tqdm import tqdm
 
 
-def output_log(str_):
+def output_log(str_=None):
     # print(str_)
     print(str_, file=scga_log_f)
 
@@ -32,12 +33,12 @@ def read_plan(test_plan_sheet, rows):
     functions_name_list = []
     total_function = 0
     level_total_coverage = {
-        'precentCoverageMCDC': 0,
-        'precentCoverageAnalysis': 0,
-        'totalCoverage': 0,
+        'percent_coverage_MCDC': 0,
+        'percent_coverage_Analysis': 0,
+        'total_coverage': 0,
     }
     module = {
-        'moduleName': None,
+        'module_name': None,
         'process': None,
         'functions': []
     }
@@ -46,26 +47,26 @@ def read_plan(test_plan_sheet, rows):
         info = test_plan_sheet.range(range_).options(transpose=True).value
         if info[1] is None:
             if info[0] == 'Level Total':
-                level_total_coverage['precentCoverageMCDC'] = info[7]
-                level_total_coverage['precentCoverageAnalysis'] = info[8]
-                level_total_coverage['totalCoverage'] = info[9]
+                level_total_coverage['percent_coverage_MCDC'] = info[7]
+                level_total_coverage['percent_coverage_Analysis'] = info[8]
+                level_total_coverage['total_coverage'] = info[9]
                 continue
             else:
                 continue
         function = {
-            'functionName': None,
+            'function_name': None,
             'analyst': None,
             'site': None,
-            'startDate': None,
+            'start_date': None,
             'coverage': {},
             'moduleStrucData': {},
             'oversight': None,
-            'defectClassification': {}
+            'defect_classification': {}
         }
         coverage = {
-            'precentCoverageMCDC': 0,
-            'precentCoverageAnalysis': 0,
-            'totalCoverage': 0,
+            'percent_coverage_MCDC': 0,
+            'percent_coverage_Analysis': 0,
+            'total_coverage': 0,
         }
         module_structure_data = {
             'covered': {},
@@ -84,26 +85,26 @@ def read_plan(test_plan_sheet, rows):
 
         defect_classification = {
             'tech': None,
-            'nonTech': None,
+            'non_tech': None,
             'process': None,
         }
         # see if info a new module line
-        if module['moduleName'] != info[1]:
+        if module['module_name'] != info[1]:
 
-            if module['moduleName'] is not None and module['moduleName'] not in modules_name_list:
-                modules_name_list.append(module['moduleName'])
+            if module['module_name'] is not None and module['module_name'] not in modules_name_list:
+                modules_name_list.append(module['module_name'])
                 modules.append(module)
             module = {
-                'moduleName': None,
+                'module_name': None,
                 'functions': []
             }
             module['process'] = info[0]
-            module['moduleName'] = info[1]
+            module['module_name'] = info[1]
         # oversight
         function['oversight'] = info[17]
-        # defect classification
+        # defect _classification
         defect_classification['tech'] = info[18]
-        defect_classification['nonTech'] = info[19]
+        defect_classification['non_tech'] = info[19]
         defect_classification['process'] = info[20]
         # total module strcuture data
         total['branches'] = info[14]
@@ -117,42 +118,42 @@ def read_plan(test_plan_sheet, rows):
         module_structure_data['total'] = total
         module_structure_data['covered'] = covered
         # coverage
-        coverage['precentCoverageMCDC'] = info[7]
-        coverage['precentCoverageAnalysis'] = info[8]
-        coverage['totalCoverage'] = info[9]
+        coverage['percent_coverage_MCDC'] = info[7]
+        coverage['percent_coverage_Analysis'] = info[8]
+        coverage['total_coverage'] = info[9]
         # function
-        function['functionName'] = info[2]
+        function['function_name'] = info[2]
         function['analyst'] = info[4]
         function['site'] = info[5]
         # strfy datetime
         if isinstance(info[6], datetime.datetime):
-            function['startDate'] = info[6].strftime("%Y-%m-%d")
+            function['start_date'] = info[6].strftime("%Y-%m-%d")
         else:
-            function['startDate'] = info[6]
+            function['start_date'] = info[6]
         function['coverage'] = coverage
         function['moduleStrucData'] = module_structure_data
         function['oversight'] = info[17]
-        function['defectClassification'] = defect_classification
+        function['defect_classification'] = defect_classification
 
         # see if info a new module line
         if info[1] not in modules_name_list or len(modules) == 0:
             module = {
-                'moduleName': None,
+                'module_name': None,
                 'functions': []
             }
             module['process'] = info[0]
-            module['moduleName'] = info[1]
+            module['module_name'] = info[1]
             module['functions'].append(function)
-            functions_name_list.append(function['functionName'])
+            functions_name_list.append(function['function_name'])
             total_function = total_function + 1
             modules.append(module)
-            modules_name_list.append(module['moduleName'])
+            modules_name_list.append(module['module_name'])
         # in case module already exist, add function to corresponding module
         else:
-            for index, moduleName in enumerate(modules_name_list):
-                if moduleName == str(module['moduleName']):
+            for index, module_name in enumerate(modules_name_list):
+                if module_name == str(module['module_name']):
                     (modules[index])['functions'].append(function)
-                    functions_name_list.append(function['functionName'])
+                    functions_name_list.append(function['function_name'])
                     total_function = total_function + 1
 
     # write into log file
@@ -183,11 +184,11 @@ def read_exceptions(test_exeception_sheet, rows):
     uncovered_modules_name_list = []
     uncovered_functions_name_list = []
     uncovered_module = {
-        'moduleName': None,
+        'module_name': None,
         'functions': []
     }
     uncovered_function = {
-        'functionName': None,
+        'function_name': None,
         'note': None,
         'uncoverage': []
     }
@@ -199,73 +200,73 @@ def read_exceptions(test_exeception_sheet, rows):
         if info[1] is None:
             continue
         uncoverage = {
-            'uncoveredSWLine': [],
-            'uncoveredinstrumentedSWLine': [],
-            'requirementID': [],
+            'uncovered_sw_line': [],
+            'uncovered_instrument_sw_line': [],
+            'requirement_id': [],
             'analyst': None,
-            'class': None,
-            'analysisSummary': None,
-            'correctActionSummary': None,
+            '_class': None,
+            'analysis_summary': None,
+            'correction_summary': None,
             'issue': None,
             'applicable': {}
         }
         applicable = {
             'PAR_SCR': None,
-            'Comments': None
+            'comment': None
         }
         uncovered_function['note'] = info[0]
         # uncovered software line
-        uncoverage['uncoveredSWLine'] = info[3]
+        uncoverage['uncovered_sw_line'] = info[3]
         # uncovered software code
-        uncoverage['uncoveredinstrumentedSWLine'] = info[4]
+        uncoverage['uncovered_instrument_sw_line'] = info[4]
         # requirements
         if info[5] is not None:
-            uncoverage['requirementID'] = str(info[5]).split('\n')
+            uncoverage['requirement_id'] = str(info[5]).split('\n')
         uncoverage['analyst'] = info[6]
-        uncoverage['class'] = info[7]
-        uncoverage['correctActionSummary'] = info[9]
+        uncoverage['_class'] = info[7]
+        uncoverage['correction_summary'] = info[9]
         uncoverage['issue'] = info[10]
         applicable['PAR_SCR'] = info[11]
-        applicable['Comments'] = info[12]
+        applicable['comment'] = info[12]
         uncoverage['applicable'] = applicable
         # see if info has new function
         if info[2] not in uncovered_functions_name_list or len(uncovered_functions_name_list) == 0:
             uncovered_function = {
-                'functionName': None,
+                'function_name': None,
                 'note': None,
                 'uncoverages': [],
                 'uncoverageCount': 0
             }
             uncovered_function['note'] = info[0]
-            uncovered_function['functionName'] = info[2]
+            uncovered_function['function_name'] = info[2]
             uncovered_function['uncoverages'].append(uncoverage)
             uncovered_function['uncoverageCount'] = uncovered_function['uncoverageCount'] + 1
             total_uncoverage = total_uncoverage + 1
             uncovered_functions_name_list.append(
-                uncovered_function['functionName'])
+                uncovered_function['function_name'])
             # see if info a new module line
             if info[1] not in uncovered_modules_name_list or len(uncovered_modules) == 0:
                 uncovered_module = {
-                    'moduleName': None,
+                    'module_name': None,
                     'functions': []
                 }
                 uncovered_module['process'] = info[0]
-                uncovered_module['moduleName'] = info[1]
+                uncovered_module['module_name'] = info[1]
                 uncovered_module['functions'].append(uncovered_function)
                 uncovered_modules.append(uncovered_module)
                 uncovered_modules_name_list.append(
-                    uncovered_module['moduleName'])
+                    uncovered_module['module_name'])
             # in case module already exist, add function to corresponding module
             else:
-                for index, moduleName in enumerate(uncovered_modules_name_list):
-                    if moduleName == str(uncovered_module['moduleName']):
+                for index, module_name in enumerate(uncovered_modules_name_list):
+                    if module_name == str(uncovered_module['module_name']):
                         (uncovered_modules[index])[
                             'functions'].append(uncovered_function)
         else:  # in case function already exist, add uncoverage information to corresponding function in corresponding module
-            for i, moduleName in enumerate(uncovered_modules_name_list):
-                if moduleName == info[1]:
+            for i, module_name in enumerate(uncovered_modules_name_list):
+                if module_name == info[1]:
                     for j, uncovered_function in enumerate((uncovered_modules[i])['functions']):
-                        if info[2] == uncovered_function['functionName']:
+                        if info[2] == uncovered_function['function_name']:
                             (uncovered_modules[i])[
                                 'functions'][j]['uncoverages'].append(uncoverage)
                             (uncovered_modules[i])['functions'][j]['uncoverageCount'] = (
@@ -299,14 +300,14 @@ def read_SCGA(app, scga_path):
         dict: scga funtions list of each level
     """
     SCGA = {
-        'SCGAName': os.path.basename(scga_path),
-        'baseLine': str(os.path.basename(scga_path)).split('_SCGA')[0],
-        'levelATest': {},
-        'levelBTest': {},
-        'levelCTest': {}
+        'file_name': os.path.basename(scga_path),
+        'baseline': str(os.path.basename(scga_path)).split('_SCGA')[0],
+        'level_A': {},
+        'level_B': {},
+        'level_C': {}
     }
     scga_function_list = {
-        'baseLine': str(os.path.basename(scga_path)).split('_SCGA')[0],
+        'baseline': str(os.path.basename(scga_path)).split('_SCGA')[0],
         'levelAFunctions': [],
         'levelBFunctions': [],
         'levelCFunctions': []
@@ -321,24 +322,24 @@ def read_SCGA(app, scga_path):
             output_log(f'extration of {currentSheet.name}')
             if 'Plan' in currentSheet.name:
                 test_plan = {
-                    'sheetName': None,
+                    'sheet_name': None,
                     'modules': [],
-                    'lvTotalCoverage': {}
+                    'lv_total_coverage': {}
                 }
                 rows = len(pd.read_excel(scga_path, currentSheet.name))
                 if rows - 7 != 0:
-                    test_plan['sheetName'] = currentSheet.name
+                    test_plan['sheet_name'] = currentSheet.name
                     test_plan['level'] = str(currentSheet.name).split(' ')[1]
-                    test_plan['modules'], test_plan['lvTotalCoverage'], function_list = read_plan(
+                    test_plan['modules'], test_plan['lv_total_coverage'], function_list = read_plan(
                         currentSheet, rows)
                     if test_plan['level'] == 'A':
-                        SCGA['levelATest']['testPlan'] = test_plan
+                        SCGA['level_A']['test_plan'] = test_plan
                         scga_function_list['levelAFunctions'] = function_list
                     elif test_plan['level'] == 'B':
-                        SCGA['levelBTest']['testPlan'] = test_plan
+                        SCGA['level_B']['test_plan'] = test_plan
                         scga_function_list['levelBFunctions'] = function_list
                     elif test_plan['level'] == 'C':
-                        SCGA['levelCTest']['testPlan'] = test_plan
+                        SCGA['level_C']['test_plan'] = test_plan
                         scga_function_list['levelCFunctions'] = function_list
                 else:
                     scga_log_f.seek(0, 2)
@@ -346,23 +347,23 @@ def read_SCGA(app, scga_path):
                         f'* SCGA Test Plan information not found in {currentSheet.name}')
             elif 'Exceptions' in currentSheet.name:
                 test_exception = {
-                    'sheetName': None,
+                    'sheet_name': None,
                     'level': None,
                     'modules': [],
                 }
                 rows = len(pd.read_excel(scga_path, currentSheet.name))
                 if rows - 5 != 0:
-                    test_exception['sheetName'] = currentSheet.name
+                    test_exception['sheet_name'] = currentSheet.name
                     test_exception['level'] = str(
                         currentSheet.name).split(' ')[1]
                     test_exception['modules'] = read_exceptions(
                         currentSheet, rows)
                     if test_exception['level'] == 'A':
-                        SCGA['levelATest']['testException'] = test_exception
+                        SCGA['level_A']['test_exception'] = test_exception
                     elif test_exception['level'] == 'B':
-                        SCGA['levelBTest']['testException'] = test_exception
+                        SCGA['level_B']['test_exception'] = test_exception
                     elif test_exception['level'] == 'C':
-                        SCGA['levelCTest']['testException'] = test_exception
+                        SCGA['level_C']['test_exception'] = test_exception
                 else:
                     scga_log_f.seek(0, 2)
                     output_log(
@@ -386,8 +387,15 @@ def parser_SCGAs(app, scga_rootpath):
     """
     SCGAs = []
     all_scga_function_list = []
+    sizecounter = 0
     for root, dirs, files in os.walk(scga_rootpath):
+        # progress bar
         for scga_f in files:
+            if scga_f.endswith('xlsm') and '~' not in str(scga_f) and 'SCGA' in str(scga_f):
+                sizecounter += 1
+        # with tqdm(total=sizecounter, unit='B', unit_scale=True, unit_divisor=1024) as pbar:
+        #     for scga_f in files:
+        for scga_f in tqdm(files, desc="Extracting SCGA files",total=sizecounter, unit="files"):
             # only handle 'SCGA' excel file, and ignore not 'xlsm' file and excel buffer file
             if scga_f.endswith('xlsm') and '~' not in str(scga_f) and 'SCGA' in str(scga_f):
                 output_log(f'='*80)
@@ -404,9 +412,10 @@ def parser_SCGAs(app, scga_rootpath):
                 output_log(f'='*60)
                 output_log(f'extraction done !')
                 output_log(f'='*80)
-                print()
-        json.dump(SCGAs, scga_json, indent=4, default=str)
-        pickle.dump(SCGAs, scga_pickle, protocol=pickle.HIGHEST_PROTOCOL)
+                output_log()
+            json.dump(SCGAs, scga_json, indent=4, default=str)
+            pickle.dump(SCGAs, scga_pickle, protocol=pickle.HIGHEST_PROTOCOL)
+    output_log(f'all extraction done !')
     return SCGAs, all_scga_function_list
 
 
@@ -438,11 +447,11 @@ def output_all_functions_as_sheet(rootpath, scga_list):
     column_range = generate_alphabet_list(len(scga_list))
     for idx, value in enumerate(scga_list):
         start_pos = f'{column_range[idx]}2'
-        ws.range(f'{column_range[idx]}1').value = value['baseLine']
+        ws.range(f'{column_range[idx]}1').value = value['baseline']
         ws.range(start_pos).options(
             transpose=True).value = value['levelAFunctions']
 
-    wb.save(os.path.join(rootpath, 'all_functions.xlsm'))
+    wb.save(os.path.join(rootpath, r'all_functions.xlsm'))
     wb.close()
     excelApp.quit()
 
@@ -451,7 +460,7 @@ def search_function_in_list(scga_list, searched_func):
     """Search function in ['modules'] list of scga
     """
     for funcIdx, item in enumerate(scga_list):
-        if item.get('functionName') == searched_func:
+        if item.get('function_name') == searched_func:
             return funcIdx, item
     return None
 
@@ -492,7 +501,7 @@ def get_output_str(scga_dict, res):
     for key in key_path:
         mods = mods.get(key)
     mod = mods[modIdx]
-    output_str = f"\t* {scga_dict.get('SCGAName')} -> {mod.get('moduleName')}\n"
+    output_str = f"\t* {scga_dict.get('file_name')} -> {mod.get('module_name')}\n"
     return output_str
 
 
@@ -569,13 +578,14 @@ def main():
                     "Can not found this location, please enter the root path again: ")
             else:
                 try:
-                    scga_log_path = os.path.join(rootPath + r'\scga_log.txt')
-                    scgas_json_path = os.path.join(rootPath + r'\scgas.json')
-                    scga_pickle_path = os.path.join(rootPath + r'\scgas.pkl')
+                    # outputPath = os.path.join(rootPath, r'Output')
+                    # outputPath.mkdir(parents=True, exist_ok=True)
+                    scga_log_path = os.path.join(rootPath + r'/scga_log.txt')
+                    scgas_json_path = os.path.join(rootPath + r'/scgas.json')
+                    scga_pickle_path = os.path.join(rootPath + r'/scgas.pkl')
                     if int(selection) == 1:
                         scga_log_f = open(scga_log_path, 'w', encoding='UTF-8')
-                        scga_json = open(scgas_json_path, 'w',
-                                         encoding='UTF-8')
+                        scga_json = open(scgas_json_path, 'w', encoding='UTF-8')
                         scga_pickle = open(scga_pickle_path, 'wb')
                     else:
                         scga_log_f = open(scga_log_path, 'a', encoding='UTF-8')
