@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ScgaViewSet, LevelViewSet, TestPlanViewSet, TestExceptionViewSet, LvTotalCoverageViewSet, SCGAModuleViewSet, SCGAFunctionViewSet, CoverageViewSet, CoveredViewSet, totalViewSet, DefectClassificationViewSet, UncoverageViewSet, UploadSCGADataView
+from .views import ScgaViewSet, LevelViewSet, TestPlanViewSet, TestExceptionViewSet, LvTotalCoverageViewSet, SCGAModuleViewSet, SCGAFunctionViewSet, CoverageViewSet, CoveredViewSet, totalViewSet, DefectClassificationViewSet, UncoverageViewSet, UploadSCGAsView
 
 # router basename-list, basename-detail will be generated automatically
 router = DefaultRouter()
@@ -19,5 +19,5 @@ router.register(r"uncoverages", UncoverageViewSet, basename="uncoverages")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path('upload-scgas/', UploadSCGADataView.as_view(), name='upload-scgas')
+    path('upload-scgas/', UploadSCGAsView.as_view(), name='upload-scgas')
 ]

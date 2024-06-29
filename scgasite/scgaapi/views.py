@@ -69,6 +69,7 @@ class LvTotalCoverageViewSet(viewsets.ModelViewSet):
     queryset = LvTotalCoverage.objects.all()
     serializer_class = LvTotalCoverageSerializer
 
+
 class SCGAModuleViewSet(viewsets.ModelViewSet):
     queryset = SCGAModule.objects.all()
     serializer_class = SCGAModuleSerializer
@@ -77,6 +78,7 @@ class SCGAModuleViewSet(viewsets.ModelViewSet):
 class SCGAFunctionViewSet(viewsets.ModelViewSet):
     queryset = SCGAFunction.objects.all()
     serializer_class = SCGAFunctionSerializer
+
 
 class CoverageViewSet(viewsets.ModelViewSet):
     queryset = Coverage.objects.all()
@@ -87,26 +89,31 @@ class CoveredViewSet(viewsets.ModelViewSet):
     queryset = Covered.objects.all()
     serializer_class = CoveredSerializer
 
+
 class totalViewSet(viewsets.ModelViewSet):
     queryset = total.objects.all()
     serializer_class = totalSerializer
 
+
 class DefectClassificationViewSet(viewsets.ModelViewSet):
     queryset = DefectClassification.objects.all()
     serializer_class = DefectClassificationSerializer
+
 
 class UncoverageViewSet(viewsets.ModelViewSet):
     queryset = Uncoverage.objects.all()
     serializer_class = UncoverageSerializer
 
 
-class UploadSCGADataView(APIView):
+class UploadSCGAsView(APIView):
     def post(self, request, *args, **kwargs):
+        import pdb
+        pdb.set_trace()
         file = request.FILES.get('file')
         if not file or not isinstance(file, UploadedFile):
             return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if not file.name.endwith('.pkl'):
+
+        if not file.name.endswith('.pkl'):
             return Response({"detail": "Invalid file format. Please upload a .pkl file."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
@@ -118,6 +125,9 @@ class UploadSCGADataView(APIView):
                 for item in data:
                     serializer = ScgaSerializer(data=item)
                     if serializer.is_valid():
+                        # serializer.save() is ensentially calling .create() or .update() method defined in Serializer class
+                        # 1. in case the primary key of request data not match with any created data, the .create() method will be call to create a new object.
+                        # 2. in case the primary key of request data already exsit in created data, the .update() methode will be call to update the corresponding data object
                         serializer.save()
                     else:
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
