@@ -67,9 +67,8 @@ class CoverageSerializer(serializers.ModelSerializer):
             'total_coverage',
         )
 
+
 # Test Plan Function serializer
-
-
 class TPFunctionSerializer(serializers.ModelSerializer):
     coverage = CoverageSerializer()
     covered = CoveredSerializer()
@@ -140,9 +139,8 @@ class TEFunctionSerializer(serializers.ModelSerializer):
                 Uncoverage.objects.create(function=function, **uncoverage_data)
         return function
 
+
 # Test Plan Module Serializer
-
-
 class TPModuleSerializer(serializers.ModelSerializer):
     functions = TPFunctionSerializer(many=True)
 
