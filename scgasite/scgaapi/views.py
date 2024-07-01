@@ -3,7 +3,7 @@ from rest_framework import generics, status, viewsets, filters
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
-from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, TestExceptionSerializer, LvTotalCoverageSerializer, SCGAModuleSerializer, SCGAFunctionSerializer, CoverageSerializer, CoveredSerializer, totalSerializer, DefectClassificationSerializer, UncoverageSerializer
+from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, TestExceptionSerializer, LvTotalCoverageSerializer, TEModuleSerializer, TEFunctionSerializer, CoverageSerializer, CoveredSerializer, totalSerializer, DefectClassificationSerializer, UncoverageSerializer
 from rest_framework.views import APIView
 from django.core.files.uploadedfile import UploadedFile
 import pickle
@@ -72,12 +72,12 @@ class LvTotalCoverageViewSet(viewsets.ModelViewSet):
 
 class SCGAModuleViewSet(viewsets.ModelViewSet):
     queryset = SCGAModule.objects.all()
-    serializer_class = SCGAModuleSerializer
+    serializer_class = TEModuleSerializer
 
 
 class SCGAFunctionViewSet(viewsets.ModelViewSet):
     queryset = SCGAFunction.objects.all()
-    serializer_class = SCGAFunctionSerializer
+    serializer_class = TEFunctionSerializer
 
 
 class CoverageViewSet(viewsets.ModelViewSet):
@@ -125,7 +125,7 @@ class UploadSCGAsView(APIView):
                     import pdb
                     pdb.set_trace()
                     if serializer.is_valid():
-                        
+
                         # serializer.save() is ensentially calling .create() or .update() method defined in Serializer class
                         # 1. in case the primary key of request data not match with any created data, the .create() method will be call to create a new object.
                         # 2. in case the primary key of request data already exsit in created data, the .update() methode will be call to update the corresponding data object

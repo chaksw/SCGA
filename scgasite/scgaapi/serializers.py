@@ -67,13 +67,14 @@ class CoverageSerializer(serializers.ModelSerializer):
             'total_coverage',
         )
 
+# Test Plan Function serializer
 
-class SCGAFunctionSerializer(serializers.ModelSerializer):
+
+class TPFunctionSerializer(serializers.ModelSerializer):
     coverage = CoverageSerializer()
     covered = CoveredSerializer()
     total = totalSerializer()
     defect_classification = DefectClassificationSerializer()
-    uncoverages = UncoverageSerializer(many=True)
 
     class Meta:
         model = SCGAFunction
@@ -89,9 +90,6 @@ class SCGAFunctionSerializer(serializers.ModelSerializer):
             'total',
             'oversight',
             'defect_classification',
-            'note',
-            'uncoverages',
-            'uncoverage_count',
         )
 
     def create(self, validated_data):
@@ -99,7 +97,6 @@ class SCGAFunctionSerializer(serializers.ModelSerializer):
         covered_data = validated_data.pop('covered')
         total_data = validated_data.pop('total')
         defect_classification_data = validated_data.pop('defect_classification')
-        uncoverages_data = validated_data.pop('uncoverages')
         function = SCGAFunction.objects.create(**validated_data)
         # coverage situation in test plan
         if coverage_data is not None:
@@ -113,6 +110,27 @@ class SCGAFunctionSerializer(serializers.ModelSerializer):
         # defect classification in test exception
         if defect_classification_data is not None:
             DefectClassification.objects.create(function=function, **defect_classification_data)
+        return function
+
+
+# Test Exception Function Serializer
+class TEFunctionSerializer(serializers.ModelSerializer):
+    uncoverages = UncoverageSerializer(many=True)
+
+    class Meta:
+        model = SCGAFunction
+        fields = (
+            'id',
+            'module',
+            'function_name',
+            'note',
+            'uncoverages',
+            'uncoverage_count',
+        )
+
+    def create(self, validated_data):
+        uncoverages_data = validated_data.pop('uncoverages')
+        function = SCGAFunction.objects.create(**validated_data)
         # uncoverage information in test exception
         if uncoverages_data is not None:
             if isinstance(uncoverages_data, list):
@@ -122,15 +140,49 @@ class SCGAFunctionSerializer(serializers.ModelSerializer):
                 Uncoverage.objects.create(function=function, **uncoverage_data)
         return function
 
+# Test Plan Module Serializer
 
-class SCGAModuleSerializer(serializers.ModelSerializer):
-    functions = SCGAFunctionSerializer(many=True)
+
+class TPModuleSerializer(serializers.ModelSerializer):
+    functions = TPFunctionSerializer(many=True)
 
     class Meta:
         model = SCGAModule
         fields = (
             'id',
             'test_plan',
+            'module_name',
+            'functions',
+            'process',
+        )
+
+    def create(self, validated_data):
+        functions_data = validated_data.pop("functions")
+        module = SCGAModule.objects.create(**validated_data)
+        # functions for module(cpp file)
+        if (functions_data is not None):
+            if isinstance(functions_data, list):
+                for function_data in functions_data:
+                    function_data['module'] = module
+                    TPFunctionSerializer.create(
+                        TPFunctionSerializer, validated_data=function_data)
+                    # SCGAFunction.objects.create(module=module, **function_data)
+            elif isinstance(functions_data, dict):
+                functions_data['module'] = module
+                TPFunctionSerializer.create(TPFunctionSerializer, validated_data=functions_data)
+                # SCGAFunction.objects.create(module=module, **function_data)
+
+        return module
+
+
+# Test Exception Module Serializer
+class TEModuleSerializer(serializers.ModelSerializer):
+    functions = TEFunctionSerializer(many=True)
+
+    class Meta:
+        model = SCGAModule
+        fields = (
+            'id',
             'test_exception',
             'module_name',
             'functions',
@@ -145,11 +197,12 @@ class SCGAModuleSerializer(serializers.ModelSerializer):
             if isinstance(functions_data, list):
                 for function_data in functions_data:
                     function_data['module'] = module
-                    SCGAFunctionSerializer.create(SCGAFunctionSerializer, validated_data=function_data)
+                    TEFunctionSerializer.create(
+                        TEFunctionSerializer, validated_data=function_data)
                     # SCGAFunction.objects.create(module=module, **function_data)
             elif isinstance(functions_data, dict):
                 functions_data['module'] = module
-                SCGAFunctionSerializer.create(SCGAFunctionSerializer, validated_data=functions_data)
+                TEFunctionSerializer.create(TEFunctionSerializer, validated_data=functions_data)
                 # SCGAFunction.objects.create(module=module, **function_data)
 
         return module
@@ -168,7 +221,7 @@ class LvTotalCoverageSerializer(serializers.ModelSerializer):
 
 
 class TestPlanSerializer(serializers.ModelSerializer):
-    modules = SCGAModuleSerializer(many=True)
+    modules = TEModuleSerializer(many=True)
     lv_total_coverage = LvTotalCoverageSerializer()
 
     class Meta:
@@ -191,11 +244,11 @@ class TestPlanSerializer(serializers.ModelSerializer):
             if isinstance(modules_data, list):
                 for module_data in modules_data:
                     module_data['test_plan'] = test_plan
-                    SCGAModuleSerializer.create(SCGAModuleSerializer(), validated_data=module_data)
+                    TEModuleSerializer.create(TEModuleSerializer(), validated_data=module_data)
                     # SCGAModule.objects.create(test_plan=test_plan, **module_data)
             elif isinstance(modules_data, dict):
                 modules_data['test_plan'] = test_plan
-                SCGAModuleSerializer.create(SCGAModuleSerializer(), validated_data=modules_data)
+                TEModuleSerializer.create(TEModuleSerializer(), validated_data=modules_data)
                 # SCGAModule.objects.create(test_plan=test_plan, **module_data)
         # level's total coverage
         if lv_total_coverage_data is not None:
@@ -204,7 +257,7 @@ class TestPlanSerializer(serializers.ModelSerializer):
 
 
 class TestExceptionSerializer(serializers.ModelSerializer):
-    modules = SCGAModuleSerializer(many=True)
+    modules = TEModuleSerializer(many=True)
 
     class Meta:
         model = TestException
@@ -224,11 +277,11 @@ class TestExceptionSerializer(serializers.ModelSerializer):
             if isinstance(modules_data, list):
                 for module_data in modules_data:
                     module_data['test_exception'] = test_exception
-                    SCGAModuleSerializer.create(SCGAModuleSerializer(), validated_data=module_data)
+                    TEModuleSerializer.create(TEModuleSerializer(), validated_data=module_data)
                     # SCGAModule.objects.create(test_exception=test_exception, **module_data)
             elif isinstance(modules_data, dict):
                 modules_data['test_exception'] = test_exception
-                SCGAModuleSerializer.create(SCGAModuleSerializer(), validated_data=modules_data)
+                TEModuleSerializer.create(TEModuleSerializer(), validated_data=modules_data)
                 # SCGAModule.objects.create(test_exception=test_exception, **module_data)
         return test_exception
 
