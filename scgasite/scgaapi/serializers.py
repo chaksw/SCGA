@@ -242,11 +242,11 @@ class TestPlanSerializer(serializers.ModelSerializer):
             if isinstance(modules_data, list):
                 for module_data in modules_data:
                     module_data['test_plan'] = test_plan
-                    TEModuleSerializer.create(TEModuleSerializer(), validated_data=module_data)
+                    TPModuleSerializer.create(TPModuleSerializer(), validated_data=module_data)
                     # SCGAModule.objects.create(test_plan=test_plan, **module_data)
             elif isinstance(modules_data, dict):
                 modules_data['test_plan'] = test_plan
-                TEModuleSerializer.create(TEModuleSerializer(), validated_data=modules_data)
+                TPModuleSerializer.create(TPModuleSerializer(), validated_data=modules_data)
                 # SCGAModule.objects.create(test_plan=test_plan, **module_data)
         # level's total coverage
         if lv_total_coverage_data is not None:
