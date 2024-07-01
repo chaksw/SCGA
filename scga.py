@@ -59,7 +59,9 @@ def read_plan(test_plan_sheet, rows):
             'site': None,
             'start_date': None,
             'coverage': {},
-            'moduleStrucData': {},
+            'covered': {},
+            'total': {},
+            # 'moduleStrucData': {},
             'oversight': None,
             'defect_classification': {}
         }
@@ -68,10 +70,10 @@ def read_plan(test_plan_sheet, rows):
             'percent_coverage_Analysis': 0,
             'total_coverage': 0,
         }
-        module_structure_data = {
-            'covered': {},
-            'total': {},
-        }
+        # module_structure_data = {
+        #     'covered': {},
+        #     'total': {},
+        # }
         covered = {
             'branches': 0,
             'pairs': 0,
@@ -115,8 +117,8 @@ def read_plan(test_plan_sheet, rows):
         covered['pairs'] = info[12]
         covered['statement'] = info[13]
         # module strcuture data
-        module_structure_data['total'] = total
-        module_structure_data['covered'] = covered
+        function['total'] = total
+        function['covered'] = covered
         # coverage
         coverage['percent_coverage_MCDC'] = info[7]
         coverage['percent_coverage_Analysis'] = info[8]
@@ -131,7 +133,7 @@ def read_plan(test_plan_sheet, rows):
         else:
             function['start_date'] = info[6]
         function['coverage'] = coverage
-        function['moduleStrucData'] = module_structure_data
+        # function['moduleStrucData'] = module_structure_data
         function['oversight'] = info[17]
         function['defect_classification'] = defect_classification
 
@@ -235,12 +237,12 @@ def read_exceptions(test_exeception_sheet, rows):
                 'function_name': None,
                 'note': None,
                 'uncoverages': [],
-                'uncoverageCount': 0
+                'uncoverage_count': 0
             }
             uncovered_function['note'] = info[0]
             uncovered_function['function_name'] = info[2]
             uncovered_function['uncoverages'].append(uncoverage)
-            uncovered_function['uncoverageCount'] = uncovered_function['uncoverageCount'] + 1
+            uncovered_function['uncoverage_count'] = uncovered_function['uncoverage_count'] + 1
             total_uncoverage = total_uncoverage + 1
             uncovered_functions_name_list.append(
                 uncovered_function['function_name'])
@@ -269,8 +271,8 @@ def read_exceptions(test_exeception_sheet, rows):
                         if info[2] == uncovered_function['function_name']:
                             (uncovered_modules[i])[
                                 'functions'][j]['uncoverages'].append(uncoverage)
-                            (uncovered_modules[i])['functions'][j]['uncoverageCount'] = (
-                                uncovered_modules[i])['functions'][j]['uncoverageCount'] + 1
+                            (uncovered_modules[i])['functions'][j]['uncoverage_count'] = (
+                                uncovered_modules[i])['functions'][j]['uncoverage_count'] + 1
                             total_uncoverage = total_uncoverage + 1
     # write into log file
     output_log(
@@ -299,13 +301,14 @@ def read_SCGA(app, scga_path):
         dict: scga dataset
         dict: scga funtions list of each level
     """
+    READ_PLAN = False
+    READ_EXCEPTION = False
     SCGA = {
         'file_name': os.path.basename(scga_path),
         'baseline': str(os.path.basename(scga_path)).split('_SCGA')[0],
-        'level_A': {},
-        'level_B': {},
-        'level_C': {}
+        'levels': []
     }
+    
     scga_function_list = {
         'baseline': str(os.path.basename(scga_path)).split('_SCGA')[0],
         'levelAFunctions': [],
@@ -316,10 +319,17 @@ def read_SCGA(app, scga_path):
     sheet_name_list = [sheet.name for sheet in scga_sheets.sheets]
     for currentSheet in scga_sheets.sheets:
         if 'Level' in currentSheet.name:
+            if not (READ_PLAN or READ_EXCEPTION):
+                Level = {
+                    'level': None,
+                    'test_plan': {},
+                    'test_exception': {},
+                }
             # point to file end
             scga_log_f.seek(0, 2)
             output_log(f'='*60)
             output_log(f'extration of {currentSheet.name}')
+            Level['level'] = str(currentSheet.name).split(' ')[1]
             if 'Plan' in currentSheet.name:
                 test_plan = {
                     'sheet_name': None,
@@ -329,45 +339,49 @@ def read_SCGA(app, scga_path):
                 rows = len(pd.read_excel(scga_path, currentSheet.name))
                 if rows - 7 != 0:
                     test_plan['sheet_name'] = currentSheet.name
-                    test_plan['level'] = str(currentSheet.name).split(' ')[1]
+                    # test_plan['level'] = str(currentSheet.name).split(' ')[1]
                     test_plan['modules'], test_plan['lv_total_coverage'], function_list = read_plan(
                         currentSheet, rows)
-                    if test_plan['level'] == 'A':
-                        SCGA['level_A']['test_plan'] = test_plan
-                        scga_function_list['levelAFunctions'] = function_list
-                    elif test_plan['level'] == 'B':
-                        SCGA['level_B']['test_plan'] = test_plan
-                        scga_function_list['levelBFunctions'] = function_list
-                    elif test_plan['level'] == 'C':
-                        SCGA['level_C']['test_plan'] = test_plan
-                        scga_function_list['levelCFunctions'] = function_list
+                    if len(test_plan['modules']) != 0:
+                        Level['test_plan'] = test_plan
+                        if Level['level'] == 'A':
+                            # SCGA['level_A']['test_plan'] = test_plan
+                            scga_function_list['levelAFunctions'] = function_list
+                        elif Level['level'] == 'B':
+                            # SCGA['level_B']['test_plan'] = test_plan
+                            scga_function_list['levelBFunctions'] = function_list
+                        elif Level['level'] == 'C':
+                            # SCGA['level_C']['test_plan'] = test_plan
+                            scga_function_list['levelCFunctions'] = function_list
+                        
                 else:
                     scga_log_f.seek(0, 2)
                     output_log(
                         f'* SCGA Test Plan information not found in {currentSheet.name}')
+                READ_PLAN = True
             elif 'Exceptions' in currentSheet.name:
                 test_exception = {
                     'sheet_name': None,
-                    'level': None,
+                    # 'level': None,
                     'modules': [],
                 }
                 rows = len(pd.read_excel(scga_path, currentSheet.name))
                 if rows - 5 != 0:
                     test_exception['sheet_name'] = currentSheet.name
-                    test_exception['level'] = str(
-                        currentSheet.name).split(' ')[1]
-                    test_exception['modules'] = read_exceptions(
-                        currentSheet, rows)
-                    if test_exception['level'] == 'A':
-                        SCGA['level_A']['test_exception'] = test_exception
-                    elif test_exception['level'] == 'B':
-                        SCGA['level_B']['test_exception'] = test_exception
-                    elif test_exception['level'] == 'C':
-                        SCGA['level_C']['test_exception'] = test_exception
+                    # test_exception['level'] = str(currentSheet.name).split(' ')[1]
+                    test_exception['modules'] = read_exceptions(currentSheet, rows)
+                    if len(test_exception['modules']) != 0:
+                        Level['test_exception'] = test_exception
+                        
                 else:
                     scga_log_f.seek(0, 2)
                     output_log(
                         f'* SCGA Test Execptions information not found in {currentSheet.name}')
+                READ_EXCEPTION = True
+            if READ_PLAN and READ_EXCEPTION:
+                SCGA['levels'].append(Level)
+                READ_PLAN = False
+                READ_EXCEPTION = False
     return SCGA, scga_function_list
 
 
@@ -413,8 +427,8 @@ def parser_SCGAs(app, scga_rootpath):
                 output_log(f'extraction done !')
                 output_log(f'='*80)
                 output_log()
-            json.dump(SCGAs, scga_json, indent=4, default=str)
-            pickle.dump(SCGAs, scga_pickle, protocol=pickle.HIGHEST_PROTOCOL)
+    json.dump(SCGAs, scga_json, indent=4, default=str)
+    pickle.dump(SCGAs, scga_pickle, protocol=pickle.HIGHEST_PROTOCOL)
     output_log(f'all extraction done !')
     return SCGAs, all_scga_function_list
 

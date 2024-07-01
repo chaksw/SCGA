@@ -107,8 +107,6 @@ class UncoverageViewSet(viewsets.ModelViewSet):
 
 class UploadSCGAsView(APIView):
     def post(self, request, *args, **kwargs):
-        import pdb
-        pdb.set_trace()
         file = request.FILES.get('file')
         if not file or not isinstance(file, UploadedFile):
             return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
@@ -124,7 +122,10 @@ class UploadSCGAsView(APIView):
                     return Response({"detail": "Invalid data format. Excepted a list of dictrionaries."}, status=status.HTTP_400_BAD_REQUEST)
                 for item in data:
                     serializer = ScgaSerializer(data=item)
+                    import pdb
+                    pdb.set_trace()
                     if serializer.is_valid():
+                        
                         # serializer.save() is ensentially calling .create() or .update() method defined in Serializer class
                         # 1. in case the primary key of request data not match with any created data, the .create() method will be call to create a new object.
                         # 2. in case the primary key of request data already exsit in created data, the .update() methode will be call to update the corresponding data object

@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 # Create your models here.
 
 PRECENTAGE_VALIDATOR = [MinValueValidator(0), MaxValueValidator(100)]
@@ -91,14 +91,20 @@ class TestException(models.Model):
 
 class LvTotalCoverage(models.Model):
     percent_coverage_MCDC = models.DecimalField(
-        max_digits=5, max_length=3, decimal_places=0, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
+        max_digits=5, decimal_places=2, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
     percent_coverage_Analysis = models.DecimalField(
-        max_digits=5, max_length=3, decimal_places=0, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
-    total_coverage = models.DecimalField(max_digits=5, max_length=3, decimal_places=0,
+        max_digits=5, decimal_places=2, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
+    total_coverage = models.DecimalField(max_digits=5, decimal_places=2,
                                          default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
     # main table function
     test_plan = models.OneToOneField(TestPlan, to_field="id", related_name="lv_total_coverage",
                                      null=True, blank=True, on_delete=models.CASCADE)
+    def save(self, *args, **kwargs):
+        # 将值四舍五入到两位小数
+        self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.total_coverage = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        super().save(*args, **kwargs)
 
 
 class SCGAModule(models.Model):
@@ -126,23 +132,30 @@ class SCGAFunction(models.Model):
     # covered = models.OneToOneField(to="moduleStrucData", to_field="id")
     # total = models.OneToOneField(to="moduleStrucData", to_field="id")
     # defect_classification = models.OneToOneField(to="defectClassification", to_field="id")
-    oversight = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL)
+    oversight = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
 
     # in test exception
-    note = models.CharField(max_length=255)
+    note = models.CharField(max_length=255, null=True)
     uncoverage_count = models.IntegerField()
 
 
 class Coverage(models.Model):
     percent_coverage_MCDC = models.DecimalField(
-        max_digits=5, max_length=3, decimal_places=0, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
+        max_digits=5, decimal_places=2, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
     percent_coverage_Analysis = models.DecimalField(
-        max_digits=5, max_length=3, decimal_places=0, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
-    total_coverage = models.DecimalField(max_digits=5, max_length=3, decimal_places=0,
+        max_digits=5, decimal_places=2, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
+    total_coverage = models.DecimalField(max_digits=5, decimal_places=2,
                                          default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
     # main table function
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="coverage",
                                     null=True, blank=True, on_delete=models.CASCADE)
+    def save(self, *args, **kwargs):
+        # 将值四舍五入到两位小数
+        self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.total_coverage = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        super().save(*args, **kwargs)
+
 
 
 class Covered(models.Model):
@@ -160,13 +173,12 @@ class total(models.Model):
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="total",
                                     null=True, blank=True, on_delete=models.CASCADE)
 
-#
 
 
 class DefectClassification(models.Model):
-    tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL)
-    non_tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL)
-    process = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL)
+    tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
+    non_tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
+    process = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="defect_classification",
                                     null=True, blank=True, on_delete=models.CASCADE)
 

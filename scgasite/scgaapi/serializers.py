@@ -284,6 +284,8 @@ class ScgaSerializer(serializers.ModelSerializer):
     # override .create() function
     # ** is destructure symbol of dictionary
     def create(self, validated_data):
+        import pdb
+        pdb.set_trace()
         print(validated_data)
         print('get there1')
         levels_data = validated_data.pop("levels")
