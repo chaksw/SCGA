@@ -235,7 +235,7 @@ class TestPlanSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         modules_data = validated_data.pop("modules")
-        lv_total_coverage_data = validated_data.pop("modules")
+        lv_total_coverage_data = validated_data.pop("lv_total_coverage")
         test_plan = TestPlan.objects.create(**validated_data)
         # modules in test
         if (modules_data is not None):
