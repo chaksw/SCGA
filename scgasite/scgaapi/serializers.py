@@ -266,7 +266,6 @@ class TestExceptionSerializer(serializers.ModelSerializer):
             'level',
             'modules'
         )
-    # modules in test
 
     def create(self, validated_data):
         modules_data = validated_data.pop("modules")
