@@ -163,11 +163,11 @@ class TPModuleSerializer(serializers.ModelSerializer):
                 for function_data in functions_data:
                     function_data['module'] = module
                     TPFunctionSerializer.create(
-                        TPFunctionSerializer, validated_data=function_data)
+                        TPFunctionSerializer(), validated_data=function_data)
                     # SCGAFunction.objects.create(module=module, **function_data)
             elif isinstance(functions_data, dict):
                 functions_data['module'] = module
-                TPFunctionSerializer.create(TPFunctionSerializer, validated_data=functions_data)
+                TPFunctionSerializer.create(TPFunctionSerializer(), validated_data=functions_data)
                 # SCGAFunction.objects.create(module=module, **function_data)
 
         return module
@@ -196,11 +196,11 @@ class TEModuleSerializer(serializers.ModelSerializer):
                 for function_data in functions_data:
                     function_data['module'] = module
                     TEFunctionSerializer.create(
-                        TEFunctionSerializer, validated_data=function_data)
+                        TEFunctionSerializer(), validated_data=function_data)
                     # SCGAFunction.objects.create(module=module, **function_data)
             elif isinstance(functions_data, dict):
                 functions_data['module'] = module
-                TEFunctionSerializer.create(TEFunctionSerializer, validated_data=functions_data)
+                TEFunctionSerializer.create(TEFunctionSerializer(), validated_data=functions_data)
                 # SCGAFunction.objects.create(module=module, **function_data)
 
         return module

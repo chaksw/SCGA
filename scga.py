@@ -210,12 +210,14 @@ def read_exceptions(test_exeception_sheet, rows):
             'analysis_summary': None,
             'correction_summary': None,
             'issue': None,
-            'applicable': {}
-        }
-        applicable = {
             'PAR_SCR': None,
-            'comment': None
+            'comment': None,
+            # 'applicable': {}
         }
+        # applicable = {
+        #     'PAR_SCR': None,
+        #     'comment': None
+        # }
         uncovered_function['note'] = info[0]
         # uncovered software line
         uncoverage['uncovered_sw_line'] = info[3]
@@ -228,9 +230,11 @@ def read_exceptions(test_exeception_sheet, rows):
         uncoverage['_class'] = info[7]
         uncoverage['correction_summary'] = info[9]
         uncoverage['issue'] = info[10]
-        applicable['PAR_SCR'] = info[11]
-        applicable['comment'] = info[12]
-        uncoverage['applicable'] = applicable
+        uncoverage['PAR_SCR'] = info[11]
+        uncoverage['comment'] = info[12]
+        # applicable['PAR_SCR'] = info[11]
+        # applicable['comment'] = info[12]
+        # uncoverage['applicable'] = applicable
         # see if info has new function
         if info[2] not in uncovered_functions_name_list or len(uncovered_functions_name_list) == 0:
             uncovered_function = {
