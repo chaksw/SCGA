@@ -15,8 +15,6 @@ class ScgaViewSet(viewsets.ModelViewSet):
     serializer_class = ScgaSerializer
 
 
-    
-
 class LevelViewSet(viewsets.ModelViewSet):
     # query is all the object of scga
     queryset = Level.objects.all()
@@ -86,7 +84,6 @@ class LvTotalCoverageViewSet(viewsets.ModelViewSet):
     queryset = LvTotalCoverage.objects.all()
     serializer_class = LvTotalCoverageSerializer
 
-
     def get_queryset(self):
         return LvTotalCoverage.objects.filter(testplan_id=self.kwargs['testplan_pk'])
 
@@ -110,7 +107,6 @@ class TPModuleViewSet(viewsets.ModelViewSet):
 class TEModuleViewSet(viewsets.ModelViewSet):
     queryset = SCGAModule.objects.all()
     serializer_class = TEModuleSerializer
-
 
     def get_queryset(self):
         return SCGAModule.objects.filter(testexception_id=self.kwargs['testexception_pk'])

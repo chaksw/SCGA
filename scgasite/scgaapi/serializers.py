@@ -74,6 +74,8 @@ class TPFunctionSerializer(serializers.ModelSerializer):
     covered = CoveredSerializer()
     total = totalSerializer()
     defect_classification = DefectClassificationSerializer()
+    uncoverages = UncoverageSerializer(required=False)
+    uncoverage_count = serializers.IntegerField(required=False)
 
     class Meta:
         model = SCGAFunction
@@ -92,6 +94,7 @@ class TPFunctionSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
+        # uncoverages_data = validated_data.pop('uncoverages', None)
         coverage_data = validated_data.pop('coverage')
         covered_data = validated_data.pop('covered')
         total_data = validated_data.pop('total')
