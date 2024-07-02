@@ -99,10 +99,13 @@ class LvTotalCoverage(models.Model):
     # main table function
     test_plan = models.OneToOneField(TestPlan, to_field="id", related_name="lv_total_coverage",
                                      null=True, blank=True, on_delete=models.CASCADE)
+
     def save(self, *args, **kwargs):
         # 将值四舍五入到两位小数
-        self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(
+            Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(
+            Decimal('0.01'), rounding=ROUND_HALF_UP)
         self.total_coverage = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         super().save(*args, **kwargs)
 
@@ -116,6 +119,9 @@ class SCGAModule(models.Model):
     # main table test exception
     test_exception = models.ForeignKey(TestException, to_field="id", related_name="modules",
                                        null=True, blank=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        self.module_name
 
 
 class SCGAFunction(models.Model):
@@ -138,6 +144,9 @@ class SCGAFunction(models.Model):
     note = models.CharField(max_length=255, null=True)
     uncoverage_count = models.IntegerField()
 
+    def __str__(self):
+        return self.function_name
+
 
 class Coverage(models.Model):
     percent_coverage_MCDC = models.DecimalField(
@@ -149,13 +158,15 @@ class Coverage(models.Model):
     # main table function
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="coverage",
                                     null=True, blank=True, on_delete=models.CASCADE)
+
     def save(self, *args, **kwargs):
         # 将值四舍五入到两位小数
-        self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(
+            Decimal('0.01'), rounding=ROUND_HALF_UP)
+        self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(
+            Decimal('0.01'), rounding=ROUND_HALF_UP)
         self.total_coverage = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         super().save(*args, **kwargs)
-
 
 
 class Covered(models.Model):
@@ -174,7 +185,6 @@ class total(models.Model):
                                     null=True, blank=True, on_delete=models.CASCADE)
 
 
-
 class DefectClassification(models.Model):
     tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
     non_tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
@@ -186,7 +196,7 @@ class DefectClassification(models.Model):
 class Uncoverage(models.Model):
     function = models.ForeignKey(SCGAFunction, to_field="id", related_name="uncoverages",
                                  null=True, blank=True, on_delete=models.CASCADE)
-    uncovered_sw_line = models.IntegerField()
+    uncovered_sw_line = models.CharField(max_length=255)
     uncovered_instrument_sw_line = models.TextField(default='')
     requirement_id = models.CharField(max_length=255)
     _class = models.CharField(max_length=255, choices=CHOICES_CLASS, default=NULL)
@@ -196,4 +206,3 @@ class Uncoverage(models.Model):
     # applicable
     PAR_SCR = models.CharField(max_length=255, default='N/A')
     comment = models.CharField(max_length=255, default='')
-    
