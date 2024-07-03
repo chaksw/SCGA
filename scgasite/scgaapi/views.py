@@ -184,7 +184,7 @@ class UploadSCGAsView(APIView):
                     serializer = ScgaSerializer(data=item)
                     import pdb
                     pdb.set_trace()
-                    if serializer.is_valid():
+                    if serializer.is_valid(raise_exception=True):
                         # serializer.save() is ensentially calling .create() or .update() method defined in Serializer class
                         # 1. in case the primary key of request data not match with any created data, the .create() method will be call to create a new object.
                         # 2. in case the primary key of request data already exsit in created data, the .update() methode will be call to update the corresponding data object

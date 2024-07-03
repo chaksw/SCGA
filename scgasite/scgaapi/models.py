@@ -91,17 +91,18 @@ class TestException(models.Model):
 
 class LvTotalCoverage(models.Model):
     percent_coverage_MCDC = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
+        max_digits=20, decimal_places=2, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
     percent_coverage_Analysis = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
-    total_coverage = models.DecimalField(max_digits=5, decimal_places=2,
-                                         default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
+        max_digits=20, decimal_places=2, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
+    total_coverage = models.DecimalField(max_digits=20, decimal_places=2,
+                                         default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
     # main table function
     test_plan = models.OneToOneField(TestPlan, to_field="id", related_name="lv_total_coverage",
                                      null=True, blank=True, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         # 将值四舍五入到两位小数
+        
         self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(
             Decimal('0.01'), rounding=ROUND_HALF_UP)
         self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(
@@ -150,11 +151,11 @@ class SCGAFunction(models.Model):
 
 class Coverage(models.Model):
     percent_coverage_MCDC = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
+        max_digits=20, decimal_places=2, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
     percent_coverage_Analysis = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
-    total_coverage = models.DecimalField(max_digits=5, decimal_places=2,
-                                         default=Decimal(0), validators=PRECENTAGE_VALIDATOR)
+        max_digits=20, decimal_places=2, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
+    total_coverage = models.DecimalField(max_digits=20, decimal_places=2,
+                                         default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
     # main table function
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="coverage",
                                     null=True, blank=True, on_delete=models.CASCADE)
