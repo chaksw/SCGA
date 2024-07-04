@@ -142,7 +142,7 @@ class SCGAFunction(models.Model):
     oversight = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
 
     # in test exception
-    note = models.CharField(max_length=255, null=True)
+    note = models.CharField(max_length=255, null=True, blank=True)
     uncoverage_count = models.IntegerField()
 
     def __str__(self):

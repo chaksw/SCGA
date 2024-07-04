@@ -2,6 +2,12 @@ from decimal import Decimal, ROUND_HALF_UP
 from rest_framework import serializers
 from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
 
+# - validate() 方法中的调用:
+#   在每个 validate() 方法中，显式调用子序列化器的 validate() 方法。
+#   这确保了在父级对象的验证过程中，子级对象的验证逻辑也被执行。
+# - is_valid() 方法中的调用:
+#   在 AuthorSerializer 中覆盖 is_valid() 方法，并显式调用嵌套的 BookSerializer 和 SectionSerializer 的 is_valid() 方法。这种方法更全面，确保了在顶层对象验证过程中，所有嵌套对象的验证方法都会被执行。
+# 这两种方法的选择主要取决于你的验证逻辑的复杂性和需求。第一种方法在 validate() 中嵌套调用，适用于比较简单的验证需求；第二种方法在 is_valid() 中嵌套调用，更适合复杂的验证需求，需要确保所有嵌套对象的验证逻辑都被执行。
 
 class UncoverageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -20,6 +26,29 @@ class UncoverageSerializer(serializers.ModelSerializer):
             'comment',
         )
 
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'uncovered_sw_line' not in data or not data['uncovered_sw_line']:
+            raise serializers.ValidationError('uncovered_sw_line cannot be empty')
+        if 'uncovered_instrument_sw_line' not in data or not data['uncovered_instrument_sw_line']:
+            raise serializers.ValidationError('uncovered_instrument_sw_line cannot be empty')
+        if 'requirement_id' not in data or not data['requirement_id']:
+            raise serializers.ValidationError('requirement id cannot be empty')
+        if '_class' not in data or not data['_class']:
+            raise serializers.ValidationError('_class cannot be empty')
+        if 'analysis_summary' not in data or not data['analysis_summary']:
+            raise serializers.ValidationError('analysis_summary cannot be empty')
+        if 'correction_summary' not in data or not data['correction_summary']:
+            raise serializers.ValidationError('correction_summary cannot be empty')
+        if 'issue' not in data or not data['issue']:
+            raise serializers.ValidationError('issue cannot be empty')
+        if 'PAR_SCR' not in data or not data['PAR_SCR']:
+            raise serializers.ValidationError('PAR_SCR cannot be empty')
+        if 'comment' not in data or not data['comment']:
+            raise serializers.ValidationError('comment cannot be empty')
+        return data
 
 class DefectClassificationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,6 +61,17 @@ class DefectClassificationSerializer(serializers.ModelSerializer):
             'process',
         )
 
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'tech' not in data:
+            raise serializers.ValidationError('key ["tech"] is missing')
+        if 'non_tech' not in data:
+            raise serializers.ValidationError('key ["non_tech"] is missing')
+        if 'process' not in data:
+            raise serializers.ValidationError('key ["process"] is missing')
+        return data
 
 class totalSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,6 +84,17 @@ class totalSerializer(serializers.ModelSerializer):
             'statement',
         )
 
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'branches' not in data or not data['branches']:
+            raise serializers.ValidationError('branches cannot be empty')
+        if 'pairs' not in data or not data['pairs']:
+            raise serializers.ValidationError('pairs cannot be empty')
+        if 'statement' not in data or not data['statement']:
+            raise serializers.ValidationError('statement cannot be empty')
+        return data
 
 class CoveredSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,6 +106,21 @@ class CoveredSerializer(serializers.ModelSerializer):
             'pairs',
             'statement',
         )
+
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'branches' not in data or not data['branches']:
+            raise serializers.ValidationError('branches cannot be empty')
+        if 'pairs' not in data or not data['pairs']:
+            raise serializers.ValidationError('pairs cannot be empty')
+        if 'statement' not in data or not data['statement']:
+            raise serializers.ValidationError('statement cannot be empty')
+        return data
+       
+
+       
 
 
 class CoverageSerializer(serializers.ModelSerializer):
@@ -69,7 +135,8 @@ class CoverageSerializer(serializers.ModelSerializer):
         )
     
     def validate(self, data):
-
+        import pdb
+        pdb.set_trace()
         if 'percent_coverage_MCDC' in data:
             data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'percent_coverage_Analysis' in data:
@@ -78,9 +145,6 @@ class CoverageSerializer(serializers.ModelSerializer):
             data['total_coverage'] = Decimal(data['total_coverage']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return data
 
-    def is_valid(self, *, raise_exception=False):
-
-        return super().is_valid(raise_exception=raise_exception)
 
 
 # Test Plan Function serializer
@@ -107,6 +171,37 @@ class TPFunctionSerializer(serializers.ModelSerializer):
             'oversight',
             'defect_classification',
         )
+    
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'function_name' not in data or not data['function_name']:
+            raise serializers.ValidationError('function name cannot be empty')
+        if 'analyst' not in data or not data['analyst']:
+            raise serializers.ValidationError('analyst cannot be empty')
+        if 'site' not in data or not data['site']:
+            raise serializers.ValidationError('site cannot be empty')
+        if 'start_date' not in data or not data['start_date']:
+            raise serializers.ValidationError('start_date cannot be empty')
+        if 'oversight' not in data or not data['oversight']:
+            raise serializers.ValidationError('oversight cannot be empty')
+        
+        coverage_data = data.get('coverage', {})
+        coverage_serializer = CoverageSerializer(data=coverage_data)
+        coverage_serializer.is_valid(raise_exception=True)
+        
+        covered_data = data.get('covered', {})
+        covered_serializer = CoveredSerializer(data=covered_data)
+        covered_serializer.is_valid(raise_exception=True)
+        
+        total_data = data.get('total', {})
+        total_serializer = totalSerializer(data=total_data)
+        total_serializer.is_valid(raise_exception=True)
+        
+        defect_classification_data = data.get('defect_classification', {})
+        defect_classification_serializer = DefectClassificationSerializer(data=defect_classification_data)
+        defect_classification_serializer.is_valid(raise_exception=True)
 
     # validate nested uncoverages data
     def is_valid(self, *, raise_exception=False):
@@ -176,6 +271,24 @@ class TEFunctionSerializer(serializers.ModelSerializer):
             'uncoverage_count',
         )
 
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'function_name' not in data or not data['function_name']:
+            raise serializers.ValidationError('function name cannot be empty')
+        if 'note' not in data:
+            raise serializers.ValidationError('key ["note"] is missing')
+        if 'uncoverage_count' not in data or not data['uncoverage_count']:
+            raise serializers.ValidationError('uncoverage count cannot be empty')
+
+        uncoverages_data = data.get('uncoverages', [])
+        for uncoverage_data in uncoverages_data:
+            uncoverage_serializer = UncoverageSerializer(data=uncoverage_data)
+            uncoverage_serializer.is_valid(raise_exception=True)
+        return data
+    
+
     # validate nested uncoverages data
     def is_valid(self, *, raise_exception=False):
         super().is_valid(raise_exception=raise_exception)
@@ -218,6 +331,21 @@ class TPModuleSerializer(serializers.ModelSerializer):
             'functions',
             'process',
         )
+
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'module_name' not in data or not data['module_name']:
+            raise serializers.ValidationError('module name cannot be empty')
+        if 'process' not in data or not data['process']:
+            raise serializers.ValidationError('process cannot be empty')
+
+        functions_data = data.get('functions', [])
+        for function_data in functions_data:
+            function_serializer = TPFunctionSerializer(data=function_data)
+            function_serializer.is_valid(raise_exception=True)
+        return data
 
     # validate nested functions data
     def is_valid(self, *, raise_exception=False):
@@ -266,6 +394,21 @@ class TEModuleSerializer(serializers.ModelSerializer):
             'functions',
             'process',
         )
+
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'module_name' not in data or not data['module_name']:
+            raise serializers.ValidationError('module name cannot be empty')
+        if 'process' not in data or not data['process']:
+            raise serializers.ValidationError('process cannot be empty')
+
+        functions_data = data.get('functions', [])
+        for function_data in functions_data:
+            function_serializer = TEFunctionSerializer(data=function_data)
+            function_serializer.is_valid(raise_exception=True)
+        return data
     
 
     def is_valid(self, *, raise_exception=False):
@@ -313,7 +456,8 @@ class LvTotalCoverageSerializer(serializers.ModelSerializer):
 
     # validate() is called automatically in the running of is_valid
     def validate(self, data):
-        import pdb;pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         if 'percent_coverage_MCDC' in data:
             data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'percent_coverage_Analysis' in data:
@@ -341,6 +485,22 @@ class TestPlanSerializer(serializers.ModelSerializer):
             'modules',
             'lv_total_coverage'
         )
+
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'sheet_name' not in data or not data['sheet_name']:
+            raise serializers.ValidationError('sheet name cannot be empty')
+        lv_total_coverage_data = data.get('lv_total_coverage', {})
+        lv_total_coverage_serializer = LvTotalCoverageSerializer(data=lv_total_coverage_data)
+        lv_total_coverage_serializer.is_valid(raise_exception=True)
+
+        modules_data = data.get('modules', [])
+        for module_data in modules_data:
+            module_serializer = TPModuleSerializer(data=module_data)
+            module_serializer.is_valid(raise_exception=True)
+        return data
 
     def is_valid(self, *, raise_exception=False):
         super().is_valid(raise_exception=raise_exception)
@@ -397,6 +557,19 @@ class TestExceptionSerializer(serializers.ModelSerializer):
             'modules'
         )
 
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'sheet_name' not in data or not data['sheet_name']:
+            raise serializers.ValidationError('sheet name cannot be empty')
+        modules_data = data.get('modules', [])
+        for module_data in modules_data:
+            module_serializer = TEModuleSerializer(data=module_data)
+            module_serializer.is_valid(raise_exception=True)
+        return data
+
+
     def is_valid(self, *, raise_exception=False):
         super().is_valid(raise_exception=raise_exception)
         import pdb
@@ -440,6 +613,22 @@ class LevelSerializer(serializers.ModelSerializer):
             'test_plan',
             'test_exception'
         )
+
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'level' not in data or not data['level']:
+            raise serializers.ValidationError('level cannot be empty')
+        
+        test_plan_data = data.get('test_plan', {})
+        test_plan_serializer = TestPlanSerializer(data=test_plan_data)
+        test_plan_serializer.is_valid(raise_exception=True)
+        test_exception_data = data.get('test_exception', {})
+        test_exception_serializer = TestExceptionSerializer(data=test_exception_data)
+        test_exception_serializer.is_valid(raise_exception=True)
+        return data
+    
 
     def is_valid(self, *, raise_exception=False):
         super().is_valid(raise_exception=raise_exception)
@@ -495,6 +684,19 @@ class ScgaSerializer(serializers.ModelSerializer):
             # 'test_exceptions'
         )
 
+    def validate(self, data):
+        import pdb
+        pdb.set_trace()
+        # check key and value
+        if 'file_name' not in data or not data['file_name']:
+            raise serializers.ValidationError('file name cannot be empty')
+        if 'baseline' not in data or not data['baseline']:
+            raise serializers.ValidationError('baseline cannot be empty')
+        levels_data = data.get('levels', [])
+        for level_data in levels_data:
+            level_serializer = LevelSerializer(data=level_data)
+            level_serializer.is_valid(raise_exception=True)
+        return data
     
 
     def is_valid(self, *, raise_exception=False):
