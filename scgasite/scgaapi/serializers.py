@@ -1,13 +1,23 @@
 from decimal import Decimal, ROUND_HALF_UP
 from rest_framework import serializers
 from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
+# DRF is_valid(), validate()函数调用逻辑
+# 1. 当 is_valid()被调用后，如果当前的 serializer 没有重写 is_valid(), 则父类的 is_valid() 会被调用。
+# 2. 当 is_valid()被调用后， validate() 函数会被自动调用，如果重写了 validate()，则会调用当前 serializer 的 validate()
+# 3. 对于嵌套层级的 serializers，DRF 会自动处理嵌套的 serializer, 也就是说，我们不需要显式地调用每个下层的 is_valid(), 在super().isvalid()被调用时， DRF 会调用下层 serializer的is_valid().
+# 4. 例如，当scga的 super().isvalid() 被调用时， ScgaSerializer.validate()会被调用，但在验证 ScgaSerializer 的字段之前， DRF 会自动调用嵌套的 LevelSerializer.is_valid() 方法，然后调用 LevelSerializer.validate(). 如此类推。
+# 5. 所以，只需要为每个 serializer 重写 validate(), 不需要在当中显式调用下层的 is_valid()方法，就能确保每个 serializer 的字段的原数据都能以我们所希望的方式被被预处理和验证。
+# 具体调用顺序：
+# 1. 调用 ScgaSerializer.is_valid()。
+# 2. ScgaSerializer.is_valid() 调用 super().is_valid()。
+# 3. super().is_valid() 调用 run_validation 方法。
+# 4. run_validation 方法调用嵌套序列化器 LevelSerializer.is_valid()。
+# 5. LevelSerializer.is_valid() 调用 super().is_valid()。
+# 6. super().is_valid() 调用 run_validation 方法。
+# 7. run_validation 方法调用嵌套序列化器 TestPlanSerializer.is_valid() 和 TestExceptionSerializer。
+# 8. 所有嵌套序列化器的 is_valid() 方法执行完毕后，返回到 ScgaSerializer
+# 9. run_validation 方法继续执行，调用 ScgaSerializer.validate() 方法。
 
-# - validate() 方法中的调用:
-#   在每个 validate() 方法中，显式调用子序列化器的 validate() 方法。
-#   这确保了在父级对象的验证过程中，子级对象的验证逻辑也被执行。
-# - is_valid() 方法中的调用:
-#   在 AuthorSerializer 中覆盖 is_valid() 方法，并显式调用嵌套的 BookSerializer 和 SectionSerializer 的 is_valid() 方法。这种方法更全面，确保了在顶层对象验证过程中，所有嵌套对象的验证方法都会被执行。
-# 这两种方法的选择主要取决于你的验证逻辑的复杂性和需求。第一种方法在 validate() 中嵌套调用，适用于比较简单的验证需求；第二种方法在 is_valid() 中嵌套调用，更适合复杂的验证需求，需要确保所有嵌套对象的验证逻辑都被执行。
 
 class UncoverageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,6 +60,7 @@ class UncoverageSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('comment cannot be empty')
         return data
 
+
 class DefectClassificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DefectClassification
@@ -73,6 +84,7 @@ class DefectClassificationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('key ["process"] is missing')
         return data
 
+
 class totalSerializer(serializers.ModelSerializer):
     class Meta:
         model = total
@@ -88,13 +100,15 @@ class totalSerializer(serializers.ModelSerializer):
         import pdb
         pdb.set_trace()
         # check key and value
-        if 'branches' not in data or not data['branches']:
+        # check key and value
+        if data['branches'] != 0 and ('branches' not in data or not data['branches']):
             raise serializers.ValidationError('branches cannot be empty')
-        if 'pairs' not in data or not data['pairs']:
+        if data['pairs'] != 0 and ('pairs' not in data or not data['pairs']):
             raise serializers.ValidationError('pairs cannot be empty')
-        if 'statement' not in data or not data['statement']:
+        if data['statement'] != 0 and ('statement' not in data or not data['statement']):
             raise serializers.ValidationError('statement cannot be empty')
         return data
+
 
 class CoveredSerializer(serializers.ModelSerializer):
     class Meta:
@@ -111,16 +125,13 @@ class CoveredSerializer(serializers.ModelSerializer):
         import pdb
         pdb.set_trace()
         # check key and value
-        if 'branches' not in data or not data['branches']:
+        if data['branches'] != 0 and ('branches' not in data or not data['branches']):
             raise serializers.ValidationError('branches cannot be empty')
-        if 'pairs' not in data or not data['pairs']:
+        if data['pairs'] != 0 and ('pairs' not in data or not data['pairs']):
             raise serializers.ValidationError('pairs cannot be empty')
-        if 'statement' not in data or not data['statement']:
+        if data['statement'] != 0 and ('statement' not in data or not data['statement']):
             raise serializers.ValidationError('statement cannot be empty')
         return data
-       
-
-       
 
 
 class CoverageSerializer(serializers.ModelSerializer):
@@ -133,18 +144,19 @@ class CoverageSerializer(serializers.ModelSerializer):
             'percent_coverage_Analysis',
             'total_coverage',
         )
-    
+
     def validate(self, data):
         import pdb
         pdb.set_trace()
         if 'percent_coverage_MCDC' in data:
-            data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'percent_coverage_Analysis' in data:
-            data['percent_coverage_Analysis'] = Decimal(data['percent_coverage_Analysis']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            data['percent_coverage_Analysis'] = Decimal(
+                data['percent_coverage_Analysis']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'total_coverage' in data:
             data['total_coverage'] = Decimal(data['total_coverage']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return data
-
 
 
 # Test Plan Function serializer
@@ -171,67 +183,69 @@ class TPFunctionSerializer(serializers.ModelSerializer):
             'oversight',
             'defect_classification',
         )
-    
+
     def validate(self, data):
         import pdb
         pdb.set_trace()
         # check key and value
         if 'function_name' not in data or not data['function_name']:
             raise serializers.ValidationError('function name cannot be empty')
-        if 'analyst' not in data or not data['analyst']:
+        # analyst, site, start_date, oversight, maybe None, so not judge it value
+        if 'analyst' not in data:
             raise serializers.ValidationError('analyst cannot be empty')
-        if 'site' not in data or not data['site']:
+        if 'site' not in data:
             raise serializers.ValidationError('site cannot be empty')
-        if 'start_date' not in data or not data['start_date']:
+        if 'start_date' not in data:
             raise serializers.ValidationError('start_date cannot be empty')
-        if 'oversight' not in data or not data['oversight']:
+        if 'oversight' not in data:
             raise serializers.ValidationError('oversight cannot be empty')
-        
-        coverage_data = data.get('coverage', {})
-        coverage_serializer = CoverageSerializer(data=coverage_data)
-        coverage_serializer.is_valid(raise_exception=True)
-        
-        covered_data = data.get('covered', {})
-        covered_serializer = CoveredSerializer(data=covered_data)
-        covered_serializer.is_valid(raise_exception=True)
-        
-        total_data = data.get('total', {})
-        total_serializer = totalSerializer(data=total_data)
-        total_serializer.is_valid(raise_exception=True)
-        
-        defect_classification_data = data.get('defect_classification', {})
-        defect_classification_serializer = DefectClassificationSerializer(data=defect_classification_data)
-        defect_classification_serializer.is_valid(raise_exception=True)
 
-    # validate nested uncoverages data
-    def is_valid(self, *, raise_exception=False):
-        super().is_valid(raise_exception=raise_exception)
-        import pdb
-        pdb.set_trace()
-        # validate nested coverage data
-        coverage_data = self.initial_data.get('coverage', {})
-        coverage_serializer = UncoverageSerializer(data=coverage_data)
-        if not coverage_serializer.is_valid(raise_exception=raise_exception):
-            self._errors['coverage'] = coverage_serializer.errors
-        # validate nested covered data
-        covered_data = self.initial_data.get('covered', {})
-        covered_serializer = UncoverageSerializer(data=covered_data)
-        if not covered_serializer.is_valid(raise_exception=raise_exception):
-            self._errors['covered'] = covered_serializer.errors
-        # validate nested total data
-        total_data = self.initial_data.get('total', {})
-        total_serializer = UncoverageSerializer(data=total_data)
-        if not total_serializer.is_valid(raise_exception=raise_exception):
-            self._errors['total'] = total_serializer.errors
-        # validate nested defect classification data
-        defect_classification_data = self.initial_data.get('defect_classification', {})
-        defect_classification_serializer = UncoverageSerializer(data=defect_classification_data)
-        if not defect_classification_serializer.is_valid(raise_exception=raise_exception):
-            self._errors['defect_classification'] = defect_classification_serializer.errors
-        if self._errors and raise_exception:
-            raise serializers.ValidationError(self.errors)
-        
-        return not bool(self._errors)
+        # coverage_data = data.get('coverage', {})
+        # coverage_serializer = CoverageSerializer(data=coverage_data)
+        # coverage_serializer.is_valid(raise_exception=True)
+
+        # covered_data = data.get('covered', {})
+        # covered_serializer = CoveredSerializer(data=covered_data)
+        # covered_serializer.is_valid(raise_exception=True)
+
+        # total_data = data.get('total', {})
+        # total_serializer = totalSerializer(data=total_data)
+        # total_serializer.is_valid(raise_exception=True)
+
+        # defect_classification_data = data.get('defect_classification', {})
+        # defect_classification_serializer = DefectClassificationSerializer(data=defect_classification_data)
+        # defect_classification_serializer.is_valid(raise_exception=True)
+        return data
+
+    # # validate nested uncoverages data
+    # def is_valid(self, *, raise_exception=False):
+    #     super().is_valid(raise_exception=raise_exception)
+    #     import pdb
+    #     pdb.set_trace()
+    #     # validate nested coverage data
+    #     coverage_data = self.initial_data.get('coverage', {})
+    #     coverage_serializer = UncoverageSerializer(data=coverage_data)
+    #     if not coverage_serializer.is_valid(raise_exception=raise_exception):
+    #         self._errors['coverage'] = coverage_serializer.errors
+    #     # validate nested covered data
+    #     covered_data = self.initial_data.get('covered', {})
+    #     covered_serializer = UncoverageSerializer(data=covered_data)
+    #     if not covered_serializer.is_valid(raise_exception=raise_exception):
+    #         self._errors['covered'] = covered_serializer.errors
+    #     # validate nested total data
+    #     total_data = self.initial_data.get('total', {})
+    #     total_serializer = UncoverageSerializer(data=total_data)
+    #     if not total_serializer.is_valid(raise_exception=raise_exception):
+    #         self._errors['total'] = total_serializer.errors
+    #     # validate nested defect classification data
+    #     defect_classification_data = self.initial_data.get('defect_classification', {})
+    #     defect_classification_serializer = UncoverageSerializer(data=defect_classification_data)
+    #     if not defect_classification_serializer.is_valid(raise_exception=raise_exception):
+    #         self._errors['defect_classification'] = defect_classification_serializer.errors
+    #     if self._errors and raise_exception:
+    #         raise serializers.ValidationError(self.errors)
+
+    #     return not bool(self._errors)
 
     def create(self, validated_data):
         # uncoverages_data = validated_data.pop('uncoverages', None)
@@ -282,28 +296,27 @@ class TEFunctionSerializer(serializers.ModelSerializer):
         if 'uncoverage_count' not in data or not data['uncoverage_count']:
             raise serializers.ValidationError('uncoverage count cannot be empty')
 
-        uncoverages_data = data.get('uncoverages', [])
-        for uncoverage_data in uncoverages_data:
-            uncoverage_serializer = UncoverageSerializer(data=uncoverage_data)
-            uncoverage_serializer.is_valid(raise_exception=True)
+        # uncoverages_data = data.get('uncoverages', [])
+        # for uncoverage_data in uncoverages_data:
+        #     uncoverage_serializer = UncoverageSerializer(data=uncoverage_data)
+        #     uncoverage_serializer.is_valid(raise_exception=True)
         return data
-    
 
     # validate nested uncoverages data
-    def is_valid(self, *, raise_exception=False):
-        super().is_valid(raise_exception=raise_exception)
-        import pdb
-        pdb.set_trace()
-        # validate nested modules data
-        for uncoverage_data in self.initial_data.get('uncoverages', []):
-            uncoverage_serializer = UncoverageSerializer(data=uncoverage_data)
-            if not uncoverage_serializer.is_valid(raise_exception=raise_exception):
-                self._errors.setdefault('uncoverages', []).append(uncoverage_serializer.errors)
-        if self._errors and raise_exception:
-            raise serializers.ValidationError(self.errors)
-        
-        return not bool(self._errors)
 
+    # def is_valid(self, *, raise_exception=False):
+    #     super().is_valid(raise_exception=raise_exception)
+    #     import pdb
+    #     pdb.set_trace()
+    #     # validate nested modules data
+    #     for uncoverage_data in self.initial_data.get('uncoverages', []):
+    #         uncoverage_serializer = UncoverageSerializer(data=uncoverage_data)
+    #         if not uncoverage_serializer.is_valid(raise_exception=raise_exception):
+    #             self._errors.setdefault('uncoverages', []).append(uncoverage_serializer.errors)
+    #     if self._errors and raise_exception:
+    #         raise serializers.ValidationError(self.errors)
+
+    #     return not bool(self._errors)
 
     def create(self, validated_data):
         uncoverages_data = validated_data.pop('uncoverages')
@@ -341,26 +354,26 @@ class TPModuleSerializer(serializers.ModelSerializer):
         if 'process' not in data or not data['process']:
             raise serializers.ValidationError('process cannot be empty')
 
-        functions_data = data.get('functions', [])
-        for function_data in functions_data:
-            function_serializer = TPFunctionSerializer(data=function_data)
-            function_serializer.is_valid(raise_exception=True)
+        # functions_data = data.get('functions', [])
+        # for function_data in functions_data:
+        #     function_serializer = TPFunctionSerializer(data=function_data)
+        #     function_serializer.is_valid(raise_exception=True)
         return data
 
-    # validate nested functions data
-    def is_valid(self, *, raise_exception=False):
-        super().is_valid(raise_exception=raise_exception)
-        import pdb
-        pdb.set_trace()
-        # validate nested modules data
-        for function_data in self.initial_data.get('functions', []):
-            function_serializer = TEFunctionSerializer(data=function_data)
-            if not function_serializer.is_valid(raise_exception=raise_exception):
-                self._errors.setdefault('functions', []).append(function_serializer.errors)
-        if self._errors and raise_exception:
-            raise serializers.ValidationError(self.errors)
-        
-        return not bool(self._errors)
+    # # validate nested functions data
+    # def is_valid(self, *, raise_exception=False):
+    #     super().is_valid(raise_exception=raise_exception)
+    #     import pdb
+    #     pdb.set_trace()
+    #     # validate nested modules data
+    #     for function_data in self.initial_data.get('functions', []):
+    #         function_serializer = TEFunctionSerializer(data=function_data)
+    #         if not function_serializer.is_valid(raise_exception=raise_exception):
+    #             self._errors.setdefault('functions', []).append(function_serializer.errors)
+    #     if self._errors and raise_exception:
+    #         raise serializers.ValidationError(self.errors)
+
+    #     return not bool(self._errors)
 
     def create(self, validated_data):
         functions_data = validated_data.pop("functions")
@@ -404,26 +417,25 @@ class TEModuleSerializer(serializers.ModelSerializer):
         if 'process' not in data or not data['process']:
             raise serializers.ValidationError('process cannot be empty')
 
-        functions_data = data.get('functions', [])
-        for function_data in functions_data:
-            function_serializer = TEFunctionSerializer(data=function_data)
-            function_serializer.is_valid(raise_exception=True)
+        # functions_data = data.get('functions', [])
+        # for function_data in functions_data:
+        #     function_serializer = TEFunctionSerializer(data=function_data)
+        #     function_serializer.is_valid(raise_exception=True)
         return data
-    
 
-    def is_valid(self, *, raise_exception=False):
-        super().is_valid(raise_exception=raise_exception)
-        import pdb
-        pdb.set_trace()
-        # validate nested functions data
-        for function_data in self.initial_data.get('functions', []):
-            function_serializer = TEFunctionSerializer(data=function_data)
-            if not function_serializer.is_valid(raise_exception=raise_exception):
-                self._errors.setdefault('functions', []).append(function_serializer.errors)
-        if self._errors and raise_exception:
-            raise serializers.ValidationError(self.errors)
-        
-        return not bool(self._errors)
+    # def is_valid(self, *, raise_exception=False):
+    #     super().is_valid(raise_exception=raise_exception)
+    #     import pdb
+    #     pdb.set_trace()
+    #     # validate nested functions data
+    #     for function_data in self.initial_data.get('functions', []):
+    #         function_serializer = TEFunctionSerializer(data=function_data)
+    #         if not function_serializer.is_valid(raise_exception=raise_exception):
+    #             self._errors.setdefault('functions', []).append(function_serializer.errors)
+    #     if self._errors and raise_exception:
+    #         raise serializers.ValidationError(self.errors)
+
+    #     return not bool(self._errors)
 
     def create(self, validated_data):
         functions_data = validated_data.pop("functions")
@@ -459,13 +471,14 @@ class LvTotalCoverageSerializer(serializers.ModelSerializer):
         import pdb
         pdb.set_trace()
         if 'percent_coverage_MCDC' in data:
-            data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'percent_coverage_Analysis' in data:
-            data['percent_coverage_Analysis'] = Decimal(data['percent_coverage_Analysis']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            data['percent_coverage_Analysis'] = Decimal(
+                data['percent_coverage_Analysis']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'total_coverage' in data:
             data['total_coverage'] = Decimal(data['total_coverage']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return data
-    
 
     def is_valid(self, *, raise_exception=False):
         return super().is_valid(raise_exception=raise_exception)
@@ -492,36 +505,36 @@ class TestPlanSerializer(serializers.ModelSerializer):
         # check key and value
         if 'sheet_name' not in data or not data['sheet_name']:
             raise serializers.ValidationError('sheet name cannot be empty')
-        lv_total_coverage_data = data.get('lv_total_coverage', {})
-        lv_total_coverage_serializer = LvTotalCoverageSerializer(data=lv_total_coverage_data)
-        lv_total_coverage_serializer.is_valid(raise_exception=True)
+        # lv_total_coverage_data = data.get('lv_total_coverage', {})
+        # lv_total_coverage_serializer = LvTotalCoverageSerializer(data=lv_total_coverage_data)
+        # lv_total_coverage_serializer.is_valid(raise_exception=True)
 
-        modules_data = data.get('modules', [])
-        for module_data in modules_data:
-            module_serializer = TPModuleSerializer(data=module_data)
-            module_serializer.is_valid(raise_exception=True)
+        # modules_data = data.get('modules', [])
+        # for module_data in modules_data:
+        #     module_serializer = TPModuleSerializer(data=module_data)
+        #     module_serializer.is_valid(raise_exception=True)
         return data
 
-    def is_valid(self, *, raise_exception=False):
-        super().is_valid(raise_exception=raise_exception)
-        import pdb
-        pdb.set_trace()
-        # validate level total coverage data
-        lv_total_coverage_data = self.initial_data.get('lv_total_coverage', {})
-        lv_total_coverage_serializer = LvTotalCoverageSerializer(data=lv_total_coverage_data)
-        # lv_total_coverage_data = lv_total_coverage_serializer.validate(lv_total_coverage_data)
-        if not lv_total_coverage_serializer.is_valid(raise_exception=raise_exception):
-            self._errors['lv_total_coverage'] = lv_total_coverage_serializer.errors
+    # def is_valid(self, *, raise_exception=False):
+    #     super().is_valid(raise_exception=raise_exception)
+    #     import pdb
+    #     pdb.set_trace()
+    #     # validate level total coverage data
+    #     lv_total_coverage_data = self.initial_data.get('lv_total_coverage', {})
+    #     lv_total_coverage_serializer = LvTotalCoverageSerializer(data=lv_total_coverage_data)
+    #     # lv_total_coverage_data = lv_total_coverage_serializer.validate(lv_total_coverage_data)
+    #     if not lv_total_coverage_serializer.is_valid(raise_exception=raise_exception):
+    #         self._errors['lv_total_coverage'] = lv_total_coverage_serializer.errors
 
-        # validate nested modules data
-        for module_data in self.initial_data.get('modules', []):
-            module_serializer = TPModuleSerializer(data=module_data)
-            if not module_serializer.is_valid(raise_exception=raise_exception):
-                self._errors.setdefault('modules', []).append(module_serializer.errors)
-        if self._errors and raise_exception:
-            raise serializers.ValidationError(self.errors)
-        
-        return not bool(self._errors)
+    #     # validate nested modules data
+    #     for module_data in self.initial_data.get('modules', []):
+    #         module_serializer = TPModuleSerializer(data=module_data)
+    #         if not module_serializer.is_valid(raise_exception=raise_exception):
+    #             self._errors.setdefault('modules', []).append(module_serializer.errors)
+    #     if self._errors and raise_exception:
+    #         raise serializers.ValidationError(self.errors)
+
+    #     return not bool(self._errors)
 
     def create(self, validated_data):
         modules_data = validated_data.pop("modules")
@@ -563,26 +576,25 @@ class TestExceptionSerializer(serializers.ModelSerializer):
         # check key and value
         if 'sheet_name' not in data or not data['sheet_name']:
             raise serializers.ValidationError('sheet name cannot be empty')
-        modules_data = data.get('modules', [])
-        for module_data in modules_data:
-            module_serializer = TEModuleSerializer(data=module_data)
-            module_serializer.is_valid(raise_exception=True)
+        # modules_data = data.get('modules', [])
+        # for module_data in modules_data:
+        #     module_serializer = TEModuleSerializer(data=module_data)
+        #     module_serializer.is_valid(raise_exception=True)
         return data
 
+    # def is_valid(self, *, raise_exception=False):
+    #     super().is_valid(raise_exception=raise_exception)
+    #     import pdb
+    #     pdb.set_trace()
+    #     # validate nested modules data
+    #     for module_data in self.initial_data.get('modules', []):
+    #         module_serializer = TEModuleSerializer(data=module_data)
+    #         if not module_serializer.is_valid(raise_exception=raise_exception):
+    #             self._errors.setdefault('modules', []).append(module_serializer.errors)
+    #     if self._errors and raise_exception:
+    #         raise serializers.ValidationError(self.errors)
 
-    def is_valid(self, *, raise_exception=False):
-        super().is_valid(raise_exception=raise_exception)
-        import pdb
-        pdb.set_trace()
-        # validate nested modules data
-        for module_data in self.initial_data.get('modules', []):
-            module_serializer = TEModuleSerializer(data=module_data)
-            if not module_serializer.is_valid(raise_exception=raise_exception):
-                self._errors.setdefault('modules', []).append(module_serializer.errors)
-        if self._errors and raise_exception:
-            raise serializers.ValidationError(self.errors)
-        
-        return not bool(self._errors)
+    #     return not bool(self._errors)
 
     def create(self, validated_data):
         modules_data = validated_data.pop("modules")
@@ -620,35 +632,32 @@ class LevelSerializer(serializers.ModelSerializer):
         # check key and value
         if 'level' not in data or not data['level']:
             raise serializers.ValidationError('level cannot be empty')
-        
-        test_plan_data = data.get('test_plan', {})
-        test_plan_serializer = TestPlanSerializer(data=test_plan_data)
-        test_plan_serializer.is_valid(raise_exception=True)
-        test_exception_data = data.get('test_exception', {})
-        test_exception_serializer = TestExceptionSerializer(data=test_exception_data)
-        test_exception_serializer.is_valid(raise_exception=True)
+
+        # test_plan_data = data.get('test_plan', {})
+        # test_plan_serializer = TestPlanSerializer(data=test_plan_data)
+        # test_plan_serializer.is_valid(raise_exception=True)
+        # test_exception_data = data.get('test_exception', {})
+        # test_exception_serializer = TestExceptionSerializer(data=test_exception_data)
+        # test_exception_serializer.is_valid(raise_exception=True)
         return data
-    
 
-    def is_valid(self, *, raise_exception=False):
-        super().is_valid(raise_exception=raise_exception)
-        import pdb
-        pdb.set_trace()
-        test_plan_data = self.initial_data.get('test_plan', {})
-        test_plan_serializer = TestPlanSerializer(data=test_plan_data)
-        test_exception_data = self.initial_data.get('test_exception', {})
-        test_exception_serializer = TestExceptionSerializer(data=test_exception_data)
-        if not test_plan_serializer.is_valid(raise_exception=raise_exception):
-            self._errors['test_plan'] = test_plan_serializer.errors
-        if not test_exception_serializer.is_valid(raise_exception=raise_exception):
-            self._errors['test_exception'] = test_exception_serializer.errors
+    # def is_valid(self, *, raise_exception=False):
+    #     valid = super().is_valid(raise_exception=raise_exception)
+    #     import pdb
+    #     pdb.set_trace()
+    #     test_plan_data = self.initial_data.get('test_plan', {})
+    #     test_plan_serializer = TestPlanSerializer(data=test_plan_data)
+    #     test_exception_data = self.initial_data.get('test_exception', {})
+    #     test_exception_serializer = TestExceptionSerializer(data=test_exception_data)
+    #     if not test_plan_serializer.is_valid(raise_exception=raise_exception):
+    #         self._errors['test_plan'] = test_plan_serializer.errors
+    #     if not test_exception_serializer.is_valid(raise_exception=raise_exception):
+    #         self._errors['test_exception'] = test_exception_serializer.errors
 
-        if self._errors and raise_exception:
-            raise serializers.ValidationError(self.errors)
-        
-        return not bool(self._errors)
-            
-        
+    #     if self._errors and raise_exception:
+    #         raise serializers.ValidationError(self.errors)
+
+    #     return not bool(self._errors)
 
     def create(self, validated_data):
         print('get there4')
@@ -692,32 +701,32 @@ class ScgaSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('file name cannot be empty')
         if 'baseline' not in data or not data['baseline']:
             raise serializers.ValidationError('baseline cannot be empty')
-        levels_data = data.get('levels', [])
-        for level_data in levels_data:
-            level_serializer = LevelSerializer(data=level_data)
-            level_serializer.is_valid(raise_exception=True)
+        # levels_data = data.get('levels', [])
+        # for level_data in levels_data:
+        #     level_serializer = LevelSerializer(data=level_data)
+        #     level_serializer.is_valid(raise_exception=True)
         return data
-    
 
-    def is_valid(self, *, raise_exception=False):
-        import pdb
-        pdb.set_trace()
-        super().is_valid(raise_exception=raise_exception)
-        import pdb
-        pdb.set_trace()
-        # validate nested levels data
-        for level_data in self.initial_data.get('levels', []):
-            level_serializer = LevelSerializer(data=level_data)
-            if not level_serializer.is_valid(raise_exception=raise_exception):
-                self._errors.setdefault('levels', []).append(level_serializer.errors)
-        if self._errors and raise_exception:
-            raise serializers.ValidationError(self.errors)
-        
-        return not bool(self._errors)
+    # def is_valid(self, *, raise_exception=False):
+    #     import pdb
+    #     pdb.set_trace()
+    #     valid = super().is_valid(raise_exception=raise_exception)
+    #     import pdb
+    #     pdb.set_trace()
+    #     if valid:
+    #         # validate nested levels data
+    #         for level_data in self.initial_data.get('levels', []):
+    #             level_serializer = LevelSerializer(data=level_data)
+    #             if not level_serializer.is_valid(raise_exception=raise_exception):
+    #                 self._errors.setdefault('levels', []).append(level_serializer.errors)
+    #         if self._errors and raise_exception:
+    #             raise serializers.ValidationError(self.errors)
 
+    #     return not bool(self._errors)
 
     # override .create() function
     # ** is destructure symbol of dictionary
+
     def create(self, validated_data):
         import pdb
         pdb.set_trace()
