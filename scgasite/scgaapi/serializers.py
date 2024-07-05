@@ -73,8 +73,6 @@ class DefectClassificationSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
         # check key and value
         if 'tech' not in data:
             raise serializers.ValidationError('key ["tech"] is missing')
@@ -97,15 +95,12 @@ class totalSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
         # check key and value
-        # check key and value
-        if data['branches'] != 0 and ('branches' not in data or not data['branches']):
+        if data['branches'] != 0 and ('branches' not in data):
             raise serializers.ValidationError('branches cannot be empty')
-        if data['pairs'] != 0 and ('pairs' not in data or not data['pairs']):
+        if data['pairs'] != 0 and ('pairs' not in data):
             raise serializers.ValidationError('pairs cannot be empty')
-        if data['statement'] != 0 and ('statement' not in data or not data['statement']):
+        if data['statement'] != 0 and ('statement' not in data):
             raise serializers.ValidationError('statement cannot be empty')
         return data
 
@@ -122,14 +117,12 @@ class CoveredSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
         # check key and value
-        if data['branches'] != 0 and ('branches' not in data or not data['branches']):
+        if data['branches'] != 0 and ('branches' not in data):
             raise serializers.ValidationError('branches cannot be empty')
-        if data['pairs'] != 0 and ('pairs' not in data or not data['pairs']):
+        if data['pairs'] != 0 and ('pairs' not in data):
             raise serializers.ValidationError('pairs cannot be empty')
-        if data['statement'] != 0 and ('statement' not in data or not data['statement']):
+        if data['statement'] != 0 and ('statement' not in data):
             raise serializers.ValidationError('statement cannot be empty')
         return data
 
@@ -146,16 +139,14 @@ class CoverageSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
+        print(data)
         if 'percent_coverage_MCDC' in data:
-            data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(
+            data['percent_coverage_MCDC'] = data['percent_coverage_MCDC'].quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'percent_coverage_Analysis' in data:
-            data['percent_coverage_Analysis'] = Decimal(
-                data['percent_coverage_Analysis']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            data['percent_coverage_Analysis'] = data['percent_coverage_Analysis'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'total_coverage' in data:
-            data['total_coverage'] = Decimal(data['total_coverage']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            data['total_coverage'] = data['total_coverage'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return data
 
 
@@ -185,8 +176,8 @@ class TPFunctionSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
+        # import pdb
+        # pdb.set_trace()
         # check key and value
         if 'function_name' not in data or not data['function_name']:
             raise serializers.ValidationError('function name cannot be empty')
@@ -468,9 +459,9 @@ class LvTotalCoverageSerializer(serializers.ModelSerializer):
 
     # validate() is called automatically in the running of is_valid
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
         if 'percent_coverage_MCDC' in data:
+            import pdb
+            pdb.set_trace()
             data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'percent_coverage_Analysis' in data:
