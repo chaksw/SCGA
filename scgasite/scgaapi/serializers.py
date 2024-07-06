@@ -40,24 +40,24 @@ class UncoverageSerializer(serializers.ModelSerializer):
         import pdb
         pdb.set_trace()
         # check key and value
-        if 'uncovered_sw_line' not in data or not data['uncovered_sw_line']:
-            raise serializers.ValidationError('uncovered_sw_line cannot be empty')
-        if 'uncovered_instrument_sw_line' not in data or not data['uncovered_instrument_sw_line']:
-            raise serializers.ValidationError('uncovered_instrument_sw_line cannot be empty')
-        if 'requirement_id' not in data or not data['requirement_id']:
-            raise serializers.ValidationError('requirement id cannot be empty')
-        if '_class' not in data or not data['_class']:
-            raise serializers.ValidationError('_class cannot be empty')
-        if 'analysis_summary' not in data or not data['analysis_summary']:
-            raise serializers.ValidationError('analysis_summary cannot be empty')
-        if 'correction_summary' not in data or not data['correction_summary']:
-            raise serializers.ValidationError('correction_summary cannot be empty')
-        if 'issue' not in data or not data['issue']:
-            raise serializers.ValidationError('issue cannot be empty')
-        if 'PAR_SCR' not in data or not data['PAR_SCR']:
-            raise serializers.ValidationError('PAR_SCR cannot be empty')
-        if 'comment' not in data or not data['comment']:
-            raise serializers.ValidationError('comment cannot be empty')
+        if 'uncovered_sw_line' not in data:
+            raise serializers.ValidationError('no attribute name: ["issue"] in data')
+        if 'uncovered_instrument_sw_line' not in data:
+            raise serializers.ValidationError('no attribute name: ["issue"] in data')
+        if 'requirement_id' not in data:
+            raise serializers.ValidationError('no attribute name: ["issue"] in data')
+        if '_class' not in data:
+            raise serializers.ValidationError('no attribute name: ["issue"] in data')
+        if 'analysis_summary' not in data:
+            raise serializers.ValidationError('no attribute name: ["issue"] in data')
+        if 'correction_summary' not in data:
+            raise serializers.ValidationError('no attribute name: ["issue"] in data')
+        if 'issue' not in data:
+            raise serializers.ValidationError('no attribute name: ["issue"] in data')
+        if 'PAR_SCR' not in data:
+            raise serializers.ValidationError('no attribute name: ["PAR_SCR"] in data')
+        if 'comment' not in data:
+            raise serializers.ValidationError('no attribute name: ["comment"] in data')
         return data
 
 
@@ -75,11 +75,11 @@ class DefectClassificationSerializer(serializers.ModelSerializer):
     def validate(self, data):
         # check key and value
         if 'tech' not in data:
-            raise serializers.ValidationError('key ["tech"] is missing')
+            raise serializers.ValidationError('no attribute name: ["tech"] in data')
         if 'non_tech' not in data:
-            raise serializers.ValidationError('key ["non_tech"] is missing')
+            raise serializers.ValidationError('no attribute name: ["non_tech"] in data')
         if 'process' not in data:
-            raise serializers.ValidationError('key ["process"] is missing')
+            raise serializers.ValidationError('no attribute name: ["process"] in data')
         return data
 
 
@@ -144,7 +144,8 @@ class CoverageSerializer(serializers.ModelSerializer):
             data['percent_coverage_MCDC'] = data['percent_coverage_MCDC'].quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'percent_coverage_Analysis' in data:
-            data['percent_coverage_Analysis'] = data['percent_coverage_Analysis'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            data['percent_coverage_Analysis'] = data['percent_coverage_Analysis'].quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP)
         if 'total_coverage' in data:
             data['total_coverage'] = data['total_coverage'].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return data
@@ -183,13 +184,13 @@ class TPFunctionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('function name cannot be empty')
         # analyst, site, start_date, oversight, maybe None, so not judge it value
         if 'analyst' not in data:
-            raise serializers.ValidationError('analyst cannot be empty')
+            raise serializers.ValidationError('no attribute name: ["analyst"] in data')
         if 'site' not in data:
-            raise serializers.ValidationError('site cannot be empty')
+            raise serializers.ValidationError('no attribute name: ["site"] in data')
         if 'start_date' not in data:
-            raise serializers.ValidationError('start_date cannot be empty')
+            raise serializers.ValidationError('no attribute name: ["start_date"] in data')
         if 'oversight' not in data:
-            raise serializers.ValidationError('oversight cannot be empty')
+            raise serializers.ValidationError('no attribute name: ["oversight"] in data')
 
         # coverage_data = data.get('coverage', {})
         # coverage_serializer = CoverageSerializer(data=coverage_data)
@@ -283,7 +284,7 @@ class TEFunctionSerializer(serializers.ModelSerializer):
         if 'function_name' not in data or not data['function_name']:
             raise serializers.ValidationError('function name cannot be empty')
         if 'note' not in data:
-            raise serializers.ValidationError('key ["note"] is missing')
+            raise serializers.ValidationError('no attribute name: ["note"] in data')
         if 'uncoverage_count' not in data or not data['uncoverage_count']:
             raise serializers.ValidationError('uncoverage count cannot be empty')
 
@@ -464,11 +465,20 @@ class LvTotalCoverageSerializer(serializers.ModelSerializer):
             pdb.set_trace()
             data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP)
+        else:
+            print('error occurred in level total coverage percent_coverage_MCDC')
+            raise serializers.ValidationError('no attribute percent_coverage_MCDC')
         if 'percent_coverage_Analysis' in data:
             data['percent_coverage_Analysis'] = Decimal(
                 data['percent_coverage_Analysis']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        else:
+            print('error occurred in level total coverage percent_coverage_Analysis')
+            raise serializers.ValidationError('no attribute percent_coverage_Analysis')
         if 'total_coverage' in data:
             data['total_coverage'] = Decimal(data['total_coverage']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        else:
+            print('error occurred in level total coverage total_coverage')
+            raise serializers.ValidationError('no attribute total_coverage')
         return data
 
     def is_valid(self, *, raise_exception=False):
@@ -495,6 +505,7 @@ class TestPlanSerializer(serializers.ModelSerializer):
         pdb.set_trace()
         # check key and value
         if 'sheet_name' not in data or not data['sheet_name']:
+            print('test plan sheet name cannot be empty')
             raise serializers.ValidationError('sheet name cannot be empty')
         # lv_total_coverage_data = data.get('lv_total_coverage', {})
         # lv_total_coverage_serializer = LvTotalCoverageSerializer(data=lv_total_coverage_data)
@@ -528,6 +539,8 @@ class TestPlanSerializer(serializers.ModelSerializer):
     #     return not bool(self._errors)
 
     def create(self, validated_data):
+        import pdb
+        pdb.set_trace()
         modules_data = validated_data.pop("modules")
         lv_total_coverage_data = validated_data.pop("lv_total_coverage")
         test_plan = TestPlan.objects.create(**validated_data)
@@ -566,6 +579,7 @@ class TestExceptionSerializer(serializers.ModelSerializer):
         pdb.set_trace()
         # check key and value
         if 'sheet_name' not in data or not data['sheet_name']:
+            print('test exception sheet name cannot be empty')
             raise serializers.ValidationError('sheet name cannot be empty')
         # modules_data = data.get('modules', [])
         # for module_data in modules_data:
@@ -605,8 +619,8 @@ class TestExceptionSerializer(serializers.ModelSerializer):
 
 class LevelSerializer(serializers.ModelSerializer):
     # one to one: One level has only one test plan and one test exception
-    test_plan = TestPlanSerializer()
-    test_exception = TestExceptionSerializer(required=False)
+    test_plan = TestPlanSerializer(required=False, allow_null=True)
+    test_exception = TestExceptionSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Level

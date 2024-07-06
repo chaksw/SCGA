@@ -90,6 +90,7 @@ class TestException(models.Model):
 
 
 class LvTotalCoverage(models.Model):
+    # ensure decinal field has max_digits and decimal_place defined and the defined value is able to covered format of input data
     percent_coverage_MCDC = models.DecimalField(
         max_digits=20, decimal_places=19, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
     percent_coverage_Analysis = models.DecimalField(
@@ -151,6 +152,7 @@ class SCGAFunction(models.Model):
 
 
 class Coverage(models.Model):
+    # ensure decinal field has max_digits and decimal_place defined and the defined value is able to covered format of input data
     percent_coverage_MCDC = models.DecimalField(
         max_digits=20, decimal_places=19, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
     percent_coverage_Analysis = models.DecimalField(
