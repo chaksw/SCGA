@@ -1,6 +1,6 @@
 from decimal import Decimal, ROUND_HALF_UP
 from rest_framework import serializers
-from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
+from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage, CHOICES_CLASS
 # DRF is_valid(), validate()函数调用逻辑
 # 1. 当 is_valid()被调用后，如果当前的 serializer 没有重写 is_valid(), 则父类的 is_valid() 会被调用。
 # 2. 当 is_valid()被调用后， validate() 函数会被自动调用，如果重写了 validate()，则会调用当前 serializer 的 validate()
@@ -36,6 +36,24 @@ class UncoverageSerializer(serializers.ModelSerializer):
             'comment',
         )
 
+    def set_class(self, value):
+        choice_map = {v: k for k, v in CHOICES_CLASS}
+        print(choice_map)
+        class_choice = None
+        if value in choice_map:
+            class_choice = choice_map[value]
+        else:
+            class_choice = ''
+        return class_choice
+
+    def set_requirement_id(self, value):
+        reqs = None
+        if isinstance(value, list):
+            reqs = '\n'.join(item for item in value if item)
+        elif isinstance(value, str):
+            reqs = value
+        return reqs
+
     def validate(self, data):
         import pdb
         pdb.set_trace()
@@ -46,8 +64,12 @@ class UncoverageSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('no attribute name: ["issue"] in data')
         if 'requirement_id' not in data:
             raise serializers.ValidationError('no attribute name: ["issue"] in data')
+        else:
+            data['requirement_id'] = self.set_requirement_id(data['requirement_id'])
         if '_class' not in data:
             raise serializers.ValidationError('no attribute name: ["issue"] in data')
+        else:
+            data['_class'] = self.set_class(data['_class'])
         if 'analysis_summary' not in data:
             raise serializers.ValidationError('no attribute name: ["issue"] in data')
         if 'correction_summary' not in data:

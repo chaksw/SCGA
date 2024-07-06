@@ -204,7 +204,7 @@ def read_exceptions(test_exeception_sheet, rows):
         uncoverage = {
             'uncovered_sw_line': [],
             'uncovered_instrument_sw_line': [],
-            'requirement_id': [],
+            'requirement_id': '',
             'analyst': None,
             '_class': None,
             'analysis_summary': None,
@@ -227,7 +227,7 @@ def read_exceptions(test_exeception_sheet, rows):
         if info[5] is not None:
             uncoverage['requirement_id'] = str(info[5]).split('\n')
         uncoverage['analyst'] = info[6]
-        uncoverage['_class'] = info[7]
+        uncoverage['_class'] = str(info[7]).replace('\\', '')
         uncoverage['correction_summary'] = info[9]
         uncoverage['issue'] = info[10]
         uncoverage['PAR_SCR'] = info[11]
@@ -312,7 +312,7 @@ def read_SCGA(app, scga_path):
         'baseline': str(os.path.basename(scga_path)).split('_SCGA')[0],
         'levels': []
     }
-    
+
     scga_function_list = {
         'baseline': str(os.path.basename(scga_path)).split('_SCGA')[0],
         'levelAFunctions': [],
@@ -357,7 +357,7 @@ def read_SCGA(app, scga_path):
                         elif Level['level'] == 'C':
                             # SCGA['level_C']['test_plan'] = test_plan
                             scga_function_list['levelCFunctions'] = function_list
-                        
+
                 else:
                     scga_log_f.seek(0, 2)
                     output_log(
@@ -376,7 +376,7 @@ def read_SCGA(app, scga_path):
                     test_exception['modules'] = read_exceptions(currentSheet, rows)
                     if len(test_exception['modules']) != 0:
                         Level['test_exception'] = test_exception
-                        
+
                 else:
                     scga_log_f.seek(0, 2)
                     output_log(
@@ -413,7 +413,7 @@ def parser_SCGAs(app, scga_rootpath):
                 sizecounter += 1
         # with tqdm(total=sizecounter, unit='B', unit_scale=True, unit_divisor=1024) as pbar:
         #     for scga_f in files:
-        for scga_f in tqdm(files, desc="Extracting SCGA files",total=sizecounter, unit="files"):
+        for scga_f in tqdm(files, desc="Extracting SCGA files", total=sizecounter, unit="files"):
             # only handle 'SCGA' excel file, and ignore not 'xlsm' file and excel buffer file
             if scga_f.endswith('xlsm') and '~' not in str(scga_f) and 'SCGA' in str(scga_f):
                 output_log(f'='*80)

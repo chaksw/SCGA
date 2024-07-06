@@ -5,11 +5,11 @@ from decimal import Decimal, ROUND_HALF_UP
 
 PRECENTAGE_VALIDATOR = [MinValueValidator(0), MaxValueValidator(100)]
 
+NULL = ''
 YES = 'Y'
 NO = 'N'
-NULL = 'NA'
 CHOICES_YN = (
-    (NULL, 'NA'),
+    (NULL, ''),
     (YES, 'Y'),
     (NO, 'N'),
 )
@@ -18,20 +18,20 @@ A = 'A'
 B = 'B'
 C = 'C'
 CHOICES_LEVEL = (
-    (NULL, 'NA'),
+    (NULL, ''),
     (A, 'A'),
     (B, 'B'),
     (C, 'C'),
 )
 
 # scga class
-INCOMPLETE_TESTS = "incomplete Tests"
-REQUIREMENTS_CODE_MISMATCH = "requirements-code mismatch"
-DEACTIVATED_CODE = "deactivated code"
-DEFENSIVE_CODE = "defensive code"
-TEST_ENVIRONMENT_LIMITATIONS = "test environment limitations"
-PREVIOUSLY_ANALYZED_SOFTWARE = "previously analyzed software"
-OTHER = "other"
+INCOMPLETE_TESTS = 'INCOMPLETE_TESTS'
+REQUIREMENTS_CODE_MISMATCH = 'REQUIREMENTS_CODE_MISMATCH'
+DEACTIVATED_CODE = 'DEACTIVATED_CODE'
+DEFENSIVE_CODE = 'DEFENSIVE_CODE'
+TEST_ENVIRONMENT_LIMITATIONS = 'TEST_ENVIRONMENT_LIMITATIONS'
+PREVIOUSLY_ANALYZED_SOFTWARE = 'PREVIOUSLY_ANALYZED_SOFTWARE'
+OTHER = 'OTHER'
 CHOICES_CLASS = (
     (NULL, 'NA'),
     (INCOMPLETE_TESTS, "Incomplete Tests"),
@@ -201,12 +201,12 @@ class Uncoverage(models.Model):
     function = models.ForeignKey(SCGAFunction, to_field="id", related_name="uncoverages",
                                  null=True, blank=True, on_delete=models.CASCADE)
     uncovered_sw_line = models.CharField(max_length=255)
-    uncovered_instrument_sw_line = models.TextField(default='')
+    uncovered_instrument_sw_line = models.TextField(default=NULL)
     requirement_id = models.CharField(max_length=255)
     _class = models.CharField(max_length=255, choices=CHOICES_CLASS, default=NULL)
-    analysis_summary = models.CharField(max_length=255, default='')
-    correction_summary = models.CharField(max_length=255, default='')
+    analysis_summary = models.CharField(max_length=255, default=NULL)
+    correction_summary = models.CharField(max_length=255, default=NULL)
     issue = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL)
     # applicable
     PAR_SCR = models.CharField(max_length=255, default='N/A')
-    comment = models.CharField(max_length=255, default='')
+    comment = models.CharField(max_length=255, default=NULL)
