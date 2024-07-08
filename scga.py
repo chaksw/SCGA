@@ -225,7 +225,8 @@ def read_exceptions(test_exeception_sheet, rows):
         uncoverage['uncovered_instrument_sw_line'] = info[4]
         # requirements
         if info[5] is not None:
-            uncoverage['requirement_id'] = str(info[5]).split('\n')
+            # uncoverage['requirement_id'] = str(info[5]).split('\n')
+            uncoverage['requirement_id'] = info[5]
         uncoverage['analyst'] = info[6]
         uncoverage['_class'] = str(info[7]).replace('\\', '')
         uncoverage['correction_summary'] = info[9]
