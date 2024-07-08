@@ -33,7 +33,7 @@ TEST_ENVIRONMENT_LIMITATIONS = 'TEST_ENVIRONMENT_LIMITATIONS'
 PREVIOUSLY_ANALYZED_SOFTWARE = 'PREVIOUSLY_ANALYZED_SOFTWARE'
 OTHER = 'OTHER'
 CHOICES_CLASS = (
-    (NULL, 'NA'),
+    (NULL, ''),
     (INCOMPLETE_TESTS, "Incomplete Tests"),
     (REQUIREMENTS_CODE_MISMATCH, "Requirements-Code Mismatch"),
     (DEACTIVATED_CODE, "Deactivated Code"),
@@ -66,7 +66,7 @@ class TestPlan(models.Model):
     # related_name is the field name that should be defined in serializer
     # scga_file = models.ForeignKey(Scga, to_field="file_name", related_name="test_plans",
     #   null=True, blank=True, on_delete=models.CASCADE)
-    sheet_name = models.CharField(max_length=255)
+    sheet_name = models.CharField(max_length=255, blank=True, null=True)
     level = models.OneToOneField(Level, to_field="id", related_name="test_plan",
                                  null=True, blank=True, on_delete=models.CASCADE)
     # level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
@@ -80,7 +80,7 @@ class TestException(models.Model):
     # related_name is the field name that should be defined in serializer
     # scga_file = models.ForeignKey(Scga, to_field="file_name", related_name="test_exceptions",
     #   null=True, blank=True, on_delete=models.CASCADE)
-    sheet_name = models.CharField(max_length=255)
+    sheet_name = models.CharField(max_length=255, blank=True, null=True)
     level = models.OneToOneField(Level, to_field="id", related_name="test_exception",
                                  null=True, blank=True, on_delete=models.CASCADE)
     # level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
@@ -92,11 +92,11 @@ class TestException(models.Model):
 class LvTotalCoverage(models.Model):
     # ensure decinal field has max_digits and decimal_place defined and the defined value is able to covered format of input data
     percent_coverage_MCDC = models.DecimalField(
-        max_digits=20, decimal_places=19, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
+        max_digits=20, decimal_places=19, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR, blank=True, null=True)
     percent_coverage_Analysis = models.DecimalField(
-        max_digits=20, decimal_places=19, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
+        max_digits=20, decimal_places=19, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR, blank=True, null=True)
     total_coverage = models.DecimalField(max_digits=20, decimal_places=19,
-                                         default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
+                                         default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR, blank=True, null=True)
     # main table function
     test_plan = models.OneToOneField(TestPlan, to_field="id", related_name="lv_total_coverage",
                                      null=True, blank=True, on_delete=models.CASCADE)
@@ -132,20 +132,20 @@ class SCGAFunction(models.Model):
     module = models.ForeignKey(SCGAModule, to_field="id", related_name="functions",
                                null=True, blank=True, on_delete=models.CASCADE)
     # common info
-    function_name = models.CharField(max_length=255)
-    analyst = models.CharField(max_length=255)
+    function_name = models.CharField(max_length=255, blank=True, null=True)
+    analyst = models.CharField(max_length=255, blank=True, null=True)
     # in test plan
-    site = models.CharField(max_length=255)
-    start_date = models.DateField()
+    site = models.CharField(max_length=255, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
     # coverage = models.OneToOneField(to="Coverage", to_field="id", null=False, blank=False)
     # covered = models.OneToOneField(to="moduleStrucData", to_field="id")
     # total = models.OneToOneField(to="moduleStrucData", to_field="id")
     # defect_classification = models.OneToOneField(to="defectClassification", to_field="id")
-    oversight = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
+    oversight = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, blank=True, null=True)
 
     # in test exception
     note = models.CharField(max_length=255, null=True, blank=True)
-    uncoverage_count = models.IntegerField()
+    uncoverage_count = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return self.function_name
@@ -154,11 +154,11 @@ class SCGAFunction(models.Model):
 class Coverage(models.Model):
     # ensure decinal field has max_digits and decimal_place defined and the defined value is able to covered format of input data
     percent_coverage_MCDC = models.DecimalField(
-        max_digits=20, decimal_places=19, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
+        max_digits=20, decimal_places=19, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR, blank=True, null=True)
     percent_coverage_Analysis = models.DecimalField(
-        max_digits=20, decimal_places=19, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
+        max_digits=20, decimal_places=19, default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR, blank=True, null=True)
     total_coverage = models.DecimalField(max_digits=20, decimal_places=19,
-                                         default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR)
+                                         default=Decimal('0.00'), validators=PRECENTAGE_VALIDATOR, blank=True, null=True)
     # main table function
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="coverage",
                                     null=True, blank=True, on_delete=models.CASCADE)
@@ -174,9 +174,9 @@ class Coverage(models.Model):
 
 
 class Covered(models.Model):
-    branches = models.IntegerField()
-    pairs = models.IntegerField()
-    statement = models.IntegerField()
+    branches = models.IntegerField(blank=True, null=True)
+    pairs = models.IntegerField(blank=True, null=True)
+    statement = models.IntegerField(blank=True, null=True)
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="covered",
                                     null=True, blank=True, on_delete=models.CASCADE)
 
@@ -190,9 +190,9 @@ class total(models.Model):
 
 
 class DefectClassification(models.Model):
-    tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
-    non_tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
-    process = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, null=True)
+    tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, blank=True, null=True)
+    non_tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, blank=True, null=True)
+    process = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, blank=True, null=True)
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="defect_classification",
                                     null=True, blank=True, on_delete=models.CASCADE)
 
@@ -200,13 +200,13 @@ class DefectClassification(models.Model):
 class Uncoverage(models.Model):
     function = models.ForeignKey(SCGAFunction, to_field="id", related_name="uncoverages",
                                  null=True, blank=True, on_delete=models.CASCADE)
-    uncovered_sw_line = models.CharField(max_length=255)
-    uncovered_instrument_sw_line = models.TextField(default=NULL)
-    requirement_id = models.CharField(max_length=255)
-    _class = models.CharField(max_length=255, choices=CHOICES_CLASS, default=NULL)
-    analysis_summary = models.CharField(max_length=255, default=NULL)
-    correction_summary = models.CharField(max_length=255, default=NULL)
-    issue = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL)
+    uncovered_sw_line = models.CharField(max_length=255, blank=True, null=True)
+    uncovered_instrument_sw_line = models.TextField(default=NULL, blank=True, null=True)
+    requirement_id = models.CharField(max_length=255, blank=True, null=True)
+    _class = models.CharField(max_length=255, choices=CHOICES_CLASS, default=NULL, blank=True, null=True)
+    analysis_summary = models.CharField(max_length=255, default=NULL, blank=True, null=True)
+    correction_summary = models.CharField(max_length=255, default=NULL, blank=True, null=True)
+    issue = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, blank=True, null=True)
     # applicable
-    PAR_SCR = models.CharField(max_length=255, default='N/A')
-    comment = models.CharField(max_length=255, default=NULL)
+    PAR_SCR = models.CharField(max_length=255, default=NULL, blank=True, null=True)
+    comment = models.CharField(max_length=255, default=NULL, blank=True, null=True)

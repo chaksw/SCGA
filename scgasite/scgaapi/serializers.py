@@ -55,8 +55,6 @@ class UncoverageSerializer(serializers.ModelSerializer):
         return reqs
 
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
         # check key and value
         if 'uncovered_sw_line' not in data:
             raise serializers.ValidationError('no attribute name: ["issue"] in data')
@@ -68,8 +66,8 @@ class UncoverageSerializer(serializers.ModelSerializer):
             data['requirement_id'] = self.set_requirement_id(data['requirement_id'])
         if '_class' not in data:
             raise serializers.ValidationError('no attribute name: ["issue"] in data')
-        else:
-            data['_class'] = self.set_class(data['_class'])
+        # else:
+        #     data['_class'] = self.set_class(data['_class'])
         if 'analysis_summary' not in data:
             raise serializers.ValidationError('no attribute name: ["issue"] in data')
         if 'correction_summary' not in data:
@@ -161,7 +159,6 @@ class CoverageSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        print(data)
         if 'percent_coverage_MCDC' in data:
             data['percent_coverage_MCDC'] = data['percent_coverage_MCDC'].quantize(
                 Decimal('0.01'), rounding=ROUND_HALF_UP)
@@ -199,12 +196,9 @@ class TPFunctionSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        # import pdb
-        # pdb.set_trace()
         # check key and value
-        if 'function_name' not in data or not data['function_name']:
-            raise serializers.ValidationError('function name cannot be empty')
-        # analyst, site, start_date, oversight, maybe None, so not judge it value
+        if 'function_name' not in data:
+            raise serializers.ValidationError('no attribute name: ["function_name"] in data')
         if 'analyst' not in data:
             raise serializers.ValidationError('no attribute name: ["analyst"] in data')
         if 'site' not in data:
@@ -286,7 +280,7 @@ class TPFunctionSerializer(serializers.ModelSerializer):
 
 # Test Exception Function Serializer
 class TEFunctionSerializer(serializers.ModelSerializer):
-    uncoverages = UncoverageSerializer(many=True)
+    uncoverages = UncoverageSerializer(many=True, required=False, allow_null=True)
 
     class Meta:
         model = SCGAFunction
@@ -300,15 +294,13 @@ class TEFunctionSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
         # check key and value
-        if 'function_name' not in data or not data['function_name']:
-            raise serializers.ValidationError('function name cannot be empty')
+        if 'function_name' not in data:
+            raise serializers.ValidationError('no attribute name: ["function_name"] in data')
         if 'note' not in data:
             raise serializers.ValidationError('no attribute name: ["note"] in data')
-        if 'uncoverage_count' not in data or not data['uncoverage_count']:
-            raise serializers.ValidationError('uncoverage count cannot be empty')
+        if 'uncoverage_count' not in data:
+            raise serializers.ValidationError('no attribute name: ["uncoverage_count"] in data')
 
         # uncoverages_data = data.get('uncoverages', [])
         # for uncoverage_data in uncoverages_data:
@@ -360,13 +352,11 @@ class TPModuleSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
         # check key and value
-        if 'module_name' not in data or not data['module_name']:
-            raise serializers.ValidationError('module name cannot be empty')
-        if 'process' not in data or not data['process']:
-            raise serializers.ValidationError('process cannot be empty')
+        if 'module_name' not in data:
+            raise serializers.ValidationError('no attribute name: ["module_name"] in data')
+        if 'process' not in data:
+            raise serializers.ValidationError('no attribute name: ["process"] in data')
 
         # functions_data = data.get('functions', [])
         # for function_data in functions_data:
@@ -410,7 +400,7 @@ class TPModuleSerializer(serializers.ModelSerializer):
 
 # Test Exception Module Serializer
 class TEModuleSerializer(serializers.ModelSerializer):
-    functions = TEFunctionSerializer(many=True)
+    functions = TEFunctionSerializer(many=True, required=False, allow_null=True)
 
     class Meta:
         model = SCGAModule
@@ -426,10 +416,10 @@ class TEModuleSerializer(serializers.ModelSerializer):
         import pdb
         pdb.set_trace()
         # check key and value
-        if 'module_name' not in data or not data['module_name']:
-            raise serializers.ValidationError('module name cannot be empty')
-        if 'process' not in data or not data['process']:
-            raise serializers.ValidationError('process cannot be empty')
+        if 'module_name' not in data:
+            raise serializers.ValidationError('no attribute name: ["module_name"] in data')
+        if 'process' not in data:
+            raise serializers.ValidationError('no attribute name: ["process"] in data')
 
         # functions_data = data.get('functions', [])
         # for function_data in functions_data:
@@ -483,10 +473,7 @@ class LvTotalCoverageSerializer(serializers.ModelSerializer):
     # validate() is called automatically in the running of is_valid
     def validate(self, data):
         if 'percent_coverage_MCDC' in data:
-            import pdb
-            pdb.set_trace()
-            data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(
-                Decimal('0.01'), rounding=ROUND_HALF_UP)
+            data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         else:
             print('error occurred in level total coverage percent_coverage_MCDC')
             raise serializers.ValidationError('no attribute percent_coverage_MCDC')
@@ -523,12 +510,10 @@ class TestPlanSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
         # check key and value
-        if 'sheet_name' not in data or not data['sheet_name']:
-            print('test plan sheet name cannot be empty')
-            raise serializers.ValidationError('sheet name cannot be empty')
+        if 'sheet_name' not in data:
+            print('no attribute name: ["sheet_name"] in data')
+            raise serializers.ValidationError('no attribute name: ["sheet_name"] in data')
         # lv_total_coverage_data = data.get('lv_total_coverage', {})
         # lv_total_coverage_serializer = LvTotalCoverageSerializer(data=lv_total_coverage_data)
         # lv_total_coverage_serializer.is_valid(raise_exception=True)
@@ -584,7 +569,7 @@ class TestPlanSerializer(serializers.ModelSerializer):
 
 
 class TestExceptionSerializer(serializers.ModelSerializer):
-    modules = TEModuleSerializer(many=True)
+    modules = TEModuleSerializer(many=True, required=False, allow_null=True)
 
     class Meta:
         model = TestException
@@ -600,9 +585,10 @@ class TestExceptionSerializer(serializers.ModelSerializer):
         import pdb
         pdb.set_trace()
         # check key and value
-        if 'sheet_name' not in data or not data['sheet_name']:
-            print('test exception sheet name cannot be empty')
-            raise serializers.ValidationError('sheet name cannot be empty')
+        if data:
+            if 'sheet_name' not in data:
+                print('no attribute name: ["sheet_name"] in data')
+                raise serializers.ValidationError('no attribute name: ["sheet_name"] in data')
         # modules_data = data.get('modules', [])
         # for module_data in modules_data:
         #     module_serializer = TEModuleSerializer(data=module_data)

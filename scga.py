@@ -7,6 +7,34 @@ import pickle
 import datetime
 from tqdm import tqdm
 
+NULL = ''
+# scga class
+INCOMPLETE_TESTS = 'INCOMPLETE_TESTS'
+REQUIREMENTS_CODE_MISMATCH = 'REQUIREMENTS_CODE_MISMATCH'
+DEACTIVATED_CODE = 'DEACTIVATED_CODE'
+DEFENSIVE_CODE = 'DEFENSIVE_CODE'
+TEST_ENVIRONMENT_LIMITATIONS = 'TEST_ENVIRONMENT_LIMITATIONS'
+PREVIOUSLY_ANALYZED_SOFTWARE = 'PREVIOUSLY_ANALYZED_SOFTWARE'
+OTHER = 'OTHER'
+CHOICES_CLASS = (
+    (NULL, ''),
+    (INCOMPLETE_TESTS, "Incomplete Tests"),
+    (REQUIREMENTS_CODE_MISMATCH, "Requirements-Code Mismatch"),
+    (DEACTIVATED_CODE, "Deactivated Code"),
+    (DEFENSIVE_CODE, "Defensive Code"),
+    (TEST_ENVIRONMENT_LIMITATIONS, "Test Environment Limitations"),
+    (PREVIOUSLY_ANALYZED_SOFTWARE, "Previously Analyzed Software"),
+    (OTHER, "Other"),
+)
+
+def set_class(value):
+    choice_map = {v: k for k, v in CHOICES_CLASS}
+    class_choice = None
+    if value in choice_map:
+        class_choice = choice_map[value]
+    else:
+        class_choice = ''
+    return class_choice
 
 def output_log(str_=None):
     # print(str_)
@@ -207,6 +235,7 @@ def read_exceptions(test_exeception_sheet, rows):
             'requirement_id': '',
             'analyst': None,
             '_class': None,
+            '_class_str': None,
             'analysis_summary': None,
             'correction_summary': None,
             'issue': None,
@@ -228,7 +257,8 @@ def read_exceptions(test_exeception_sheet, rows):
             # uncoverage['requirement_id'] = str(info[5]).split('\n')
             uncoverage['requirement_id'] = info[5]
         uncoverage['analyst'] = info[6]
-        uncoverage['_class'] = str(info[7]).replace('\\', '')
+        uncoverage['_class_str'] = str(info[7]).replace('\\', '')
+        uncoverage['_class'] = set_class(info[7])
         uncoverage['correction_summary'] = info[9]
         uncoverage['issue'] = info[10]
         uncoverage['PAR_SCR'] = info[11]
