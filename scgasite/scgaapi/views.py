@@ -21,9 +21,13 @@ class LevelViewSet(viewsets.ModelViewSet):
     serializer_class = LevelSerializer
 
     def get_queryset(self):
-        return Level.objects.filter(scga_id=self.kwargs['scga_pk'])
+        scga_id = self.kwargs.get('scga_pk')
+        return Level.objects.filter(scga_id=scga_id)
+        # return Level.objects.filter(scga_id=self.kwargs['scga_pk'])
 
     def perform_create(self, serializer):
+        # scga_id = self.kwargs.get('scga_pk')
+        # scga = Level.objects.get(pk=scga_id)
         scga = Level.objects.get(pk=self.kwargs['scga_pk'])
         serializer.save(scga=scga)
 
@@ -34,7 +38,9 @@ class TestPlanViewSet(viewsets.ModelViewSet):
     serializer_class = TestPlanSerializer
 
     def get_queryset(self):
-        return TestPlan.objects.filter(level_id=self.kwargs['level_pk'])
+        level_id = self.kwargs.get('level_pk')
+        return TestPlan.objects.filter(level_id=level_id)
+        # return TestPlan.objects.filter(level_id=self.kwargs['level_pk'])
 
     def create(self, request, *args, **kwargs):
         # 添加调试日志
@@ -53,8 +59,24 @@ class TestPlanViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
+        # level_id = self.kwargs.get('level_pk')
+        # level = Level.objects.get(pk=level_id)
         level = Level.objects.get(pk=self.kwargs['level_pk'])
         serializer.save(level=level)
+
+
+class TPModuleViewSet(viewsets.ModelViewSet):
+    queryset = SCGAModule.objects.all()
+    serializer_class = TPModuleSerializer
+
+    def get_queryset(self):
+        test_plan_id = self.kwargs.get('test_plan_pk')
+        return SCGAModule.objects.filter(test_plan_id=test_plan_id)
+        # return SCGAModule.objects.filter(test_plan_id=self.kwargs['test_plan_pk'])
+
+    def perform_create(self, serializer):
+        testplan = Level.objects.get(pk=self.kwargs['test_plan_pk'])
+        serializer.save(testplan=testplan)
 
 
 class TestExceptionViewSet(viewsets.ModelViewSet):
@@ -62,7 +84,9 @@ class TestExceptionViewSet(viewsets.ModelViewSet):
     serializer_class = TestExceptionSerializer
 
     def get_queryset(self):
-        return TestException.objects.filter(level_id=self.kwargs['level_pk'])
+        level_id = self.kwargs.get('level_pk')
+        return TestException.objects.filter(level_id=level_id)
+        # return TestException.objects.filter(level_id=self.kwargs['level_pk'])
 
     def create(self, request, *args, **kwargs):
         # 添加调试日志
@@ -76,6 +100,8 @@ class TestExceptionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
+        # level_id = self.kwargs.get('level_pk')
+        # level = Level.objects.get(pk=level_id)
         level = Level.objects.get(pk=self.kwargs['level_pk'])
         serializer.save(level=level)
 
@@ -85,22 +111,12 @@ class LvTotalCoverageViewSet(viewsets.ModelViewSet):
     serializer_class = LvTotalCoverageSerializer
 
     def get_queryset(self):
-        return LvTotalCoverage.objects.filter(testplan_id=self.kwargs['testplan_pk'])
+        test_plan_id = self.kwargs.get('test_plan_pk')
+        return LvTotalCoverage.objects.filter(test_plan_id=test_plan_id)
+        # return LvTotalCoverage.objects.filter(test_plan_id=self.kwargs['test_plan_pk'])
 
     def perform_create(self, serializer):
-        testplan = Level.objects.get(pk=self.kwargs['testplan_pk'])
-        serializer.save(testplan=testplan)
-
-
-class TPModuleViewSet(viewsets.ModelViewSet):
-    queryset = SCGAModule.objects.all()
-    serializer_class = TPModuleSerializer
-
-    def get_queryset(self):
-        return SCGAModule.objects.filter(testplan_id=self.kwargs['testplan_pk'])
-
-    def perform_create(self, serializer):
-        testplan = Level.objects.get(pk=self.kwargs['testplan_pk'])
+        testplan = Level.objects.get(pk=self.kwargs['test_plan_pk'])
         serializer.save(testplan=testplan)
 
 
@@ -109,10 +125,12 @@ class TEModuleViewSet(viewsets.ModelViewSet):
     serializer_class = TEModuleSerializer
 
     def get_queryset(self):
-        return SCGAModule.objects.filter(testexception_id=self.kwargs['testexception_pk'])
+        test_exception_id = self.kwargs.get('test_exception_pk')
+        return SCGAModule.objects.filter(test_exception_id=test_exception_id)
+        # return SCGAModule.objects.filter(test_exception_id=self.kwargs['test_exception_pk'])
 
     def perform_create(self, serializer):
-        testexception = Level.objects.get(pk=self.kwargs['testexception_pk'])
+        testexception = Level.objects.get(pk=self.kwargs['test_exception_pk'])
         serializer.save(testexception=testexception)
 
 
@@ -121,10 +139,12 @@ class TPFunctionViewSet(viewsets.ModelViewSet):
     serializer_class = TPFunctionSerializer
 
     def get_queryset(self):
-        return SCGAFunction.objects.filter(tpmodule_id=self.kwargs['tpmodule_pk'])
+        temodule_id = self.kwargs.get('module_pk')
+        return SCGAFunction.objects.filter(module_id=temodule_id)
+        # return SCGAFunction.objects.filter(module_id=self.kwargs['module_pk'])
 
     def perform_create(self, serializer):
-        tpmodule = Level.objects.get(pk=self.kwargs['tpmodule_pk'])
+        tpmodule = Level.objects.get(pk=self.kwargs['module_pk'])
         serializer.save(tpmodule=tpmodule)
 
 
@@ -133,10 +153,12 @@ class TEFunctionViewSet(viewsets.ModelViewSet):
     serializer_class = TEFunctionSerializer
 
     def get_queryset(self):
-        return SCGAFunction.objects.filter(temodule_id=self.kwargs['temodule_pk'])
+        tpmodule_id = self.kwargs.get('module_pk')
+        return SCGAFunction.objects.filter(module_id=tpmodule_id)
+        # return SCGAFunction.objects.filter(module_id=self.kwargs['module_pk'])
 
     def perform_create(self, serializer):
-        temodule = Level.objects.get(pk=self.kwargs['temodule_pk'])
+        temodule = Level.objects.get(pk=self.kwargs['module_pk'])
         serializer.save(temodule=temodule)
 
 

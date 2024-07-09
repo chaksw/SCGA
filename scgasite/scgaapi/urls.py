@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework_nested  import routers
+from rest_framework_nested import routers
 from .views import ScgaViewSet, LevelViewSet, TestPlanViewSet, TestExceptionViewSet, LvTotalCoverageViewSet, TPModuleViewSet, TEModuleViewSet, TPFunctionViewSet, TEFunctionViewSet, CoverageViewSet, CoveredViewSet, totalViewSet, DefectClassificationViewSet, UncoverageViewSet, UploadSCGAsView
 
 # router basename-list, basename-detail will be generated automatically
@@ -20,32 +20,36 @@ router.register(r"totals", totalViewSet, basename="totals")
 router.register(r"defectclassifications", DefectClassificationViewSet, basename="defectclassifications")
 router.register(r"uncoverages", UncoverageViewSet, basename="uncoverages")
 
+# loopup 的定义决定了在url中你将用什么在传递主键值
+# 比如: lookup = 'scga', 那么在level中，其主键SCGA的键值就默认为scga_pk，具体在嵌套url中，运行get_queryset()时，
+# 同时要注意的是，lookup 的值要与 level定义的 field值相同，否则会出现混乱
+
 # Nested router
 # scgas/{scga_id}/levels
 scgas_router = routers.NestedSimpleRouter(router, r'scgas', lookup='scga')
 scgas_router.register(r'levels', LevelViewSet, basename='scga-levels')
 
-# levels/{level_id}/testplans
-# levels/{level_id}/testexceptions
-levels_router = routers.NestedSimpleRouter(router, r'levels', lookup='level')
+# scgas/{scga_id}/levels/{level_id}/testplans
+# scgas/{scga_id}/levels/{level_id}/testexceptions
+levels_router = routers.NestedSimpleRouter(scgas_router, r'levels', lookup='level')
 levels_router.register(r'testplans', TestPlanViewSet, basename='level-testplans')
 levels_router.register(r'testexceptions', TestExceptionViewSet, basename='level-testexceptions')
 
-# testplans/{testplan_id}/modules
-testplans_router = routers.NestedSimpleRouter(router, r'testplans', lookup='testplan')
-testplans_router.register(r'tpmodules', TPModuleViewSet, basename='testplan-modules')
-testplans_router.register(r'lvtotalcoverages', LvTotalCoverageViewSet, basename='testplan-lvtotalcoverages')
+# scgas/{scga_id}/levels/{level_id}/testplans/{testplan_id}/modules
+testplans_router = routers.NestedSimpleRouter(levels_router, r'testplans', lookup='test_plan')
+testplans_router.register(r'tpmodules', TPModuleViewSet, basename='test_plan-modules')
+testplans_router.register(r'lvtotalcoverages', LvTotalCoverageViewSet, basename='test_plan-lvtotalcoverages')
 
-# testexceptions/{testexception_id}/modules
-testexceptions_router = routers.NestedSimpleRouter(router, r'testexceptions', lookup='testexception')
-testexceptions_router.register(r'temodules', TEModuleViewSet, basename='testexception-modules')
-
-# testplans/{testplan_id}/tpmodules/{tpmodule_id}/tpfunctions
-tpmodules_router = routers.NestedSimpleRouter(router, r'tpmodules', lookup='tpmodule')
+# scgas/{scga_id}/levels/{level_id}/testplans/{testplan_id}/tpmodules/{tpmodule_id}/tpfunctions
+tpmodules_router = routers.NestedSimpleRouter(testplans_router, r'tpmodules', lookup='module')
 tpmodules_router.register(r'tpfunctions', TPFunctionViewSet, basename='tpmodule-tpfunctions')
 
-# testexceptions/{testexception_id}/temodules/{temodule_id}/tefunctions
-temodules_router = routers.NestedSimpleRouter(router, r'temodules', lookup='temodule')
+# scgas/{scga_id}/levels/{level_id}/testexceptions/{testexception_id}/modules
+testexceptions_router = routers.NestedSimpleRouter(levels_router, r'testexceptions', lookup='test_exception')
+testexceptions_router.register(r'temodules', TEModuleViewSet, basename='test_exception-modules')
+
+# scgas/{scga_id}/levels/{level_id}/testexceptions/{testexception_id}/temodules/{temodule_id}/tefunctions
+temodules_router = routers.NestedSimpleRouter(testexceptions_router, r'temodules', lookup='temodule')
 temodules_router.register(r'tefunctions', TEFunctionViewSet, basename='temodule-tefunctions')
 
 urlpatterns = [

@@ -208,10 +208,7 @@ class TPFunctionSerializer(serializers.ModelSerializer):
         if 'oversight' not in data:
             raise serializers.ValidationError('no attribute name: ["oversight"] in data')
 
-        
         return data
-
-    
 
     def create(self, validated_data):
         # uncoverages_data = validated_data.pop('uncoverages', None)
@@ -261,7 +258,6 @@ class TEFunctionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('no attribute name: ["uncoverage_count"] in data')
         return data
 
-
     def create(self, validated_data):
         uncoverages_data = validated_data.pop('uncoverages')
         function = SCGAFunction.objects.create(**validated_data)
@@ -298,8 +294,6 @@ class TPModuleSerializer(serializers.ModelSerializer):
 
         return data
 
-    
-
     def create(self, validated_data):
         functions_data = validated_data.pop("functions")
         module = SCGAModule.objects.create(**validated_data)
@@ -314,7 +308,7 @@ class TPModuleSerializer(serializers.ModelSerializer):
             elif isinstance(functions_data, dict):
                 functions_data['module'] = module
                 TPFunctionSerializer.create(TPFunctionSerializer(), validated_data=functions_data)
-                
+
         return module
 
 
@@ -340,7 +334,6 @@ class TEModuleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('no attribute name: ["process"] in data')
         return data
 
-   
     def create(self, validated_data):
         functions_data = validated_data.pop("functions")
         module = SCGAModule.objects.create(**validated_data)
@@ -354,7 +347,7 @@ class TEModuleSerializer(serializers.ModelSerializer):
             elif isinstance(functions_data, dict):
                 functions_data['module'] = module
                 TEFunctionSerializer.create(TEFunctionSerializer(), validated_data=functions_data)
-                
+
         return module
 
 
@@ -372,7 +365,8 @@ class LvTotalCoverageSerializer(serializers.ModelSerializer):
     # validate() is called automatically in the running of is_valid
     def validate(self, data):
         if 'percent_coverage_MCDC' in data:
-            data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            data['percent_coverage_MCDC'] = Decimal(data['percent_coverage_MCDC']).quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP)
         else:
             print('error occurred in level total coverage percent_coverage_MCDC')
             raise serializers.ValidationError('no attribute percent_coverage_MCDC')
@@ -401,7 +395,7 @@ class TestPlanSerializer(serializers.ModelSerializer):
         model = TestPlan
         fields = (
             'id',
-            # 'scga_file',
+            # 'scga',
             'sheet_name',
             'level',
             'modules',
@@ -413,9 +407,8 @@ class TestPlanSerializer(serializers.ModelSerializer):
         if 'sheet_name' not in data:
             print('no attribute name: ["sheet_name"] in data')
             raise serializers.ValidationError('no attribute name: ["sheet_name"] in data')
-        
-        return data
 
+        return data
 
     def create(self, validated_data):
         import pdb
@@ -447,7 +440,7 @@ class TestExceptionSerializer(serializers.ModelSerializer):
         model = TestException
         fields = (
             'id',
-            # 'scga_file',
+            # 'scga',
             'sheet_name',
             'level',
             'modules'
@@ -459,9 +452,8 @@ class TestExceptionSerializer(serializers.ModelSerializer):
             if 'sheet_name' not in data:
                 print('no attribute name: ["sheet_name"] in data')
                 raise serializers.ValidationError('no attribute name: ["sheet_name"] in data')
-        
-        return data
 
+        return data
 
     def create(self, validated_data):
         modules_data = validated_data.pop("modules")
@@ -497,9 +489,8 @@ class LevelSerializer(serializers.ModelSerializer):
         # check key and value
         if 'level' not in data or not data['level']:
             raise serializers.ValidationError('level cannot be empty')
-       
-        return data
 
+        return data
 
     def create(self, validated_data):
         print('get there4')
@@ -549,15 +540,12 @@ class ScgaSerializer(serializers.ModelSerializer):
         import pdb
         pdb.set_trace()
         print(validated_data)
-        print('get there1')
         levels_data = validated_data.pop("levels")
         scga = Scga.objects.create(**validated_data)
         if levels_data is not None:
             print(levels_data)
-            print('get there2')
             for level_data in levels_data:
-                level_data['scga_file'] = scga
-                print('get there3')
+                level_data['scga'] = scga
                 LevelSerializer.create(LevelSerializer(), validated_data=level_data)
-               
+
         return scga

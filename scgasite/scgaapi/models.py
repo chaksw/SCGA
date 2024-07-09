@@ -54,8 +54,8 @@ class Scga(models.Model):
 
 class Level(models.Model):
     level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL, blank=True, null=True)
-    scga_file = models.ForeignKey(Scga, to_field="id", related_name="levels",
-                                  blank=True, null=True, on_delete=models.CASCADE)
+    scga = models.ForeignKey(Scga, to_field="id", related_name="levels",
+                             blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.level
