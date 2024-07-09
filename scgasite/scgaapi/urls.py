@@ -38,7 +38,7 @@ testplans_router.register(r'lvtotalcoverages', LvTotalCoverageViewSet, basename=
 
 # testexceptions/{testexception_id}/modules
 testexceptions_router = routers.NestedSimpleRouter(router, r'testexceptions', lookup='testexception')
-testexceptions_router.register(r'temodules', TPModuleViewSet, basename='testexception-modules')
+testexceptions_router.register(r'temodules', TEModuleViewSet, basename='testexception-modules')
 
 # testplans/{testplan_id}/tpmodules/{tpmodule_id}/tpfunctions
 tpmodules_router = routers.NestedSimpleRouter(router, r'tpmodules', lookup='tpmodule')

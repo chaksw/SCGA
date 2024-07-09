@@ -45,17 +45,17 @@ CHOICES_CLASS = (
 
 
 class Scga(models.Model):
-    file_name = models.CharField(max_length=255, unique=True)
-    baseline = models.CharField(max_length=255)
+    file_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    baseline = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.file_name
 
 
 class Level(models.Model):
-    level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
+    level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL, blank=True, null=True)
     scga_file = models.ForeignKey(Scga, to_field="id", related_name="levels",
-                                  null=True, blank=True, on_delete=models.CASCADE)
+                                  blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.level
@@ -68,7 +68,7 @@ class TestPlan(models.Model):
     #   null=True, blank=True, on_delete=models.CASCADE)
     sheet_name = models.CharField(max_length=255, blank=True, null=True)
     level = models.OneToOneField(Level, to_field="id", related_name="test_plan",
-                                 null=True, blank=True, on_delete=models.CASCADE)
+                                 blank=True, null=True, on_delete=models.CASCADE)
     # level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 
     def __str__(self):
@@ -82,7 +82,7 @@ class TestException(models.Model):
     #   null=True, blank=True, on_delete=models.CASCADE)
     sheet_name = models.CharField(max_length=255, blank=True, null=True)
     level = models.OneToOneField(Level, to_field="id", related_name="test_exception",
-                                 null=True, blank=True, on_delete=models.CASCADE)
+                                 blank=True, null=True, on_delete=models.CASCADE)
     # level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 
     def __str__(self):
@@ -102,9 +102,6 @@ class LvTotalCoverage(models.Model):
                                      null=True, blank=True, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
-        # 将值四舍五入到两位小数
-        import pdb
-        pdb.set_trace()
         self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(
             Decimal('0.01'), rounding=ROUND_HALF_UP)
         self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(
@@ -114,14 +111,14 @@ class LvTotalCoverage(models.Model):
 
 
 class SCGAModule(models.Model):
-    module_name = models.CharField(max_length=255)
-    process = models.CharField(max_length=255)
+    module_name = models.CharField(max_length=255, blank=True, null=True)
+    process = models.CharField(max_length=255, blank=True, null=True)
     # main table test plan
     test_plan = models.ForeignKey(TestPlan, to_field="id", related_name="modules",
-                                  null=True, blank=True, on_delete=models.CASCADE)
+                                  blank=True, null=True, on_delete=models.CASCADE)
     # main table test exception
     test_exception = models.ForeignKey(TestException, to_field="id", related_name="modules",
-                                       null=True, blank=True, on_delete=models.CASCADE)
+                                       blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         self.module_name
@@ -130,7 +127,7 @@ class SCGAModule(models.Model):
 class SCGAFunction(models.Model):
     # main table module
     module = models.ForeignKey(SCGAModule, to_field="id", related_name="functions",
-                               null=True, blank=True, on_delete=models.CASCADE)
+                               blank=True, null=True, on_delete=models.CASCADE)
     # common info
     function_name = models.CharField(max_length=255, blank=True, null=True)
     analyst = models.CharField(max_length=255, blank=True, null=True)
@@ -178,15 +175,15 @@ class Covered(models.Model):
     pairs = models.IntegerField(blank=True, null=True)
     statement = models.IntegerField(blank=True, null=True)
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="covered",
-                                    null=True, blank=True, on_delete=models.CASCADE)
+                                    blank=True, null=True, on_delete=models.CASCADE)
 
 
 class total(models.Model):
-    branches = models.IntegerField()
-    pairs = models.IntegerField()
-    statement = models.IntegerField()
+    branches = models.IntegerField(blank=True, null=True)
+    pairs = models.IntegerField(blank=True, null=True)
+    statement = models.IntegerField(blank=True, null=True)
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="total",
-                                    null=True, blank=True, on_delete=models.CASCADE)
+                                    blank=True, null=True, on_delete=models.CASCADE)
 
 
 class DefectClassification(models.Model):
@@ -194,12 +191,12 @@ class DefectClassification(models.Model):
     non_tech = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, blank=True, null=True)
     process = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, blank=True, null=True)
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="defect_classification",
-                                    null=True, blank=True, on_delete=models.CASCADE)
+                                    blank=True, null=True, on_delete=models.CASCADE)
 
 
 class Uncoverage(models.Model):
     function = models.ForeignKey(SCGAFunction, to_field="id", related_name="uncoverages",
-                                 null=True, blank=True, on_delete=models.CASCADE)
+                                 blank=True, null=True, on_delete=models.CASCADE)
     uncovered_sw_line = models.CharField(max_length=255, blank=True, null=True)
     uncovered_instrument_sw_line = models.TextField(default=NULL, blank=True, null=True)
     requirement_id = models.CharField(max_length=255, blank=True, null=True)
