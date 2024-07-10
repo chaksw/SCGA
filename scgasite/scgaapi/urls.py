@@ -44,13 +44,24 @@ testplans_router.register(r'lvtotalcoverages', LvTotalCoverageViewSet, basename=
 tpmodules_router = routers.NestedSimpleRouter(testplans_router, r'tpmodules', lookup='module')
 tpmodules_router.register(r'tpfunctions', TPFunctionViewSet, basename='tpmodule-tpfunctions')
 
+tpfunctions_router = routers.NestedSimpleRouter(tpmodules_router, r'tpfunctions', lookup='function')
+tpfunctions_router.register(r'coverage', CoverageViewSet, basename='tpfunction-coverage')
+tpfunctions_router.register(r'covered', CoveredViewSet, basename='tpfunction-covered')
+tpfunctions_router.register(r'total', totalViewSet, basename='tpfunction-total')
+tpfunctions_router.register(r'defect_classification', DefectClassificationViewSet, basename='tpfunction-defect_classification')
+
 # scgas/{scga_id}/levels/{level_id}/testexceptions/{testexception_id}/modules
 testexceptions_router = routers.NestedSimpleRouter(levels_router, r'testexceptions', lookup='test_exception')
 testexceptions_router.register(r'temodules', TEModuleViewSet, basename='test_exception-modules')
 
 # scgas/{scga_id}/levels/{level_id}/testexceptions/{testexception_id}/temodules/{temodule_id}/tefunctions
-temodules_router = routers.NestedSimpleRouter(testexceptions_router, r'temodules', lookup='temodule')
+temodules_router = routers.NestedSimpleRouter(testexceptions_router, r'temodules', lookup='module')
 temodules_router.register(r'tefunctions', TEFunctionViewSet, basename='temodule-tefunctions')
+
+tefunctions_router = routers.NestedSimpleRouter(temodules_router, r'tefunctions', lookup='function')
+tefunctions_router.register(r'uncoverages', UncoverageViewSet, basename='tpfunction-uncoverages')
+
+
 
 urlpatterns = [
     path("", include(router.urls)),
@@ -60,5 +71,7 @@ urlpatterns = [
     path("", include(testexceptions_router.urls)),
     path("", include(tpmodules_router.urls)),
     path("", include(temodules_router.urls)),
+    path("", include(tpfunctions_router.urls)),
+    path("", include(tefunctions_router.urls)),
     path('upload-scgas/', UploadSCGAsView.as_view(), name='upload-scgas')
 ]

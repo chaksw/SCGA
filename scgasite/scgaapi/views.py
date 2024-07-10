@@ -7,9 +7,12 @@ from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, Te
 from rest_framework.views import APIView
 from django.core.files.uploadedfile import UploadedFile
 import pickle
+from rest_framework.exceptions import ValidationError
 # Create your views here.
 
-
+# get_queryset() will be called for access of url (GET())
+# perform_create will be called for creation of data (POST()), it will execute in .create() once is_valid() return true
+# pk is more general. When you define a custom primary key field in a model, pk will always refer to this custom primary key, whereas id is the default field name.
 class ScgaViewSet(viewsets.ModelViewSet):
     queryset = Scga.objects.all()
     serializer_class = ScgaSerializer
@@ -26,9 +29,16 @@ class LevelViewSet(viewsets.ModelViewSet):
         # return Level.objects.filter(scga_id=self.kwargs['scga_pk'])
 
     def perform_create(self, serializer):
+        scga_id = self.request.data.get('scga')
+        if not scga_id:
+            raise ValidationError({'scga': 'This field is required'})
+        try:
+            scga = Level.objects.get(pk=scga_id)
+        except Scga.DoesNotExist:
+            raise ValidationError({'scga': 'SCGA does not exist'})
         # scga_id = self.kwargs.get('scga_pk')
         # scga = Level.objects.get(pk=scga_id)
-        scga = Level.objects.get(pk=self.kwargs['scga_pk'])
+        # scga = Level.objects.get(pk=self.kwargs['scga_pk'])
         serializer.save(scga=scga)
 
 
@@ -60,23 +70,12 @@ class TestPlanViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # level_id = self.kwargs.get('level_pk')
-        # level = Level.objects.get(pk=level_id)
-        level = Level.objects.get(pk=self.kwargs['level_pk'])
+        # level = TestPlan.objects.get(pk=level_id)
+        level = TestPlan.objects.get(pk=self.kwargs['level_pk'])
         serializer.save(level=level)
 
 
-class TPModuleViewSet(viewsets.ModelViewSet):
-    queryset = SCGAModule.objects.all()
-    serializer_class = TPModuleSerializer
 
-    def get_queryset(self):
-        test_plan_id = self.kwargs.get('test_plan_pk')
-        return SCGAModule.objects.filter(test_plan_id=test_plan_id)
-        # return SCGAModule.objects.filter(test_plan_id=self.kwargs['test_plan_pk'])
-
-    def perform_create(self, serializer):
-        testplan = Level.objects.get(pk=self.kwargs['test_plan_pk'])
-        serializer.save(testplan=testplan)
 
 
 class TestExceptionViewSet(viewsets.ModelViewSet):
@@ -101,8 +100,8 @@ class TestExceptionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # level_id = self.kwargs.get('level_pk')
-        # level = Level.objects.get(pk=level_id)
-        level = Level.objects.get(pk=self.kwargs['level_pk'])
+        # level = TestException.objects.get(pk=level_id)
+        level = TestException.objects.get(pk=self.kwargs['level_pk'])
         serializer.save(level=level)
 
 
@@ -116,8 +115,23 @@ class LvTotalCoverageViewSet(viewsets.ModelViewSet):
         # return LvTotalCoverage.objects.filter(test_plan_id=self.kwargs['test_plan_pk'])
 
     def perform_create(self, serializer):
-        testplan = Level.objects.get(pk=self.kwargs['test_plan_pk'])
-        serializer.save(testplan=testplan)
+        testplan = LvTotalCoverage.objects.get(pk=self.kwargs['test_plan_pk'])
+        serializer.save(test_plan=testplan)
+
+class TPModuleViewSet(viewsets.ModelViewSet):
+    queryset = SCGAModule.objects.all()
+    serializer_class = TPModuleSerializer
+
+    def get_queryset(self):
+        test_plan_id = self.kwargs.get('test_plan_pk')
+        return SCGAModule.objects.filter(test_plan_id=test_plan_id)
+        # return SCGAModule.objects.filter(test_plan_id=self.kwargs['test_plan_pk'])
+
+    def perform_create(self, serializer):
+        testplan = SCGAModule.objects.get(pk=self.kwargs['test_plan_pk'])
+        serializer.save(test_plan=testplan)
+
+
 
 
 class TEModuleViewSet(viewsets.ModelViewSet):
@@ -130,8 +144,8 @@ class TEModuleViewSet(viewsets.ModelViewSet):
         # return SCGAModule.objects.filter(test_exception_id=self.kwargs['test_exception_pk'])
 
     def perform_create(self, serializer):
-        testexception = Level.objects.get(pk=self.kwargs['test_exception_pk'])
-        serializer.save(testexception=testexception)
+        testexception = SCGAModule.objects.get(pk=self.kwargs['test_exception_pk'])
+        serializer.save(test_exception=testexception)
 
 
 class TPFunctionViewSet(viewsets.ModelViewSet):
@@ -144,8 +158,8 @@ class TPFunctionViewSet(viewsets.ModelViewSet):
         # return SCGAFunction.objects.filter(module_id=self.kwargs['module_pk'])
 
     def perform_create(self, serializer):
-        tpmodule = Level.objects.get(pk=self.kwargs['module_pk'])
-        serializer.save(tpmodule=tpmodule)
+        tpmodule = SCGAFunction.objects.get(pk=self.kwargs['module_pk'])
+        serializer.save(module=tpmodule)
 
 
 class TEFunctionViewSet(viewsets.ModelViewSet):
@@ -153,38 +167,85 @@ class TEFunctionViewSet(viewsets.ModelViewSet):
     serializer_class = TEFunctionSerializer
 
     def get_queryset(self):
-        tpmodule_id = self.kwargs.get('module_pk')
-        return SCGAFunction.objects.filter(module_id=tpmodule_id)
+        temodule_id = self.kwargs.get('module_pk')
+        return SCGAFunction.objects.filter(module_id=temodule_id)
         # return SCGAFunction.objects.filter(module_id=self.kwargs['module_pk'])
 
     def perform_create(self, serializer):
-        temodule = Level.objects.get(pk=self.kwargs['module_pk'])
-        serializer.save(temodule=temodule)
+        temodule = SCGAFunction.objects.get(pk=self.kwargs['module_pk'])
+        serializer.save(module=temodule)
 
 
 class CoverageViewSet(viewsets.ModelViewSet):
     queryset = Coverage.objects.all()
     serializer_class = CoverageSerializer
 
+    def get_queryset(self):
+        tpfunction_id = self.kwargs.get('function_pk')
+        return Coverage.objects.filter(function_id=tpfunction_id)
+        # return Coverage.objects.filter(function_id=self.kwargs['tpfunction_id'])
+
+    def perform_create(self, serializer):
+        tpfunction = Coverage.objects.get(pk=self.kwargs['function_pk'])
+        serializer.save(function=tpfunction)
+
 
 class CoveredViewSet(viewsets.ModelViewSet):
     queryset = Covered.objects.all()
     serializer_class = CoveredSerializer
+
+    def get_queryset(self):
+        tpfunction_id = self.kwargs.get('function_pk')
+        return Covered.objects.filter(function_id=tpfunction_id)
+        # return Coverage.objects.filter(function_id=self.kwargs['tpfunction_id'])
+
+    def perform_create(self, serializer):
+        tpfunction = Covered.objects.get(pk=self.kwargs['function_pk'])
+        serializer.save(function=tpfunction)
 
 
 class totalViewSet(viewsets.ModelViewSet):
     queryset = total.objects.all()
     serializer_class = totalSerializer
 
+    def get_queryset(self):
+        tpfunction_id = self.kwargs.get('function_pk')
+        return total.objects.filter(function_id=tpfunction_id)
+        # return Coverage.objects.filter(function_id=self.kwargs['tpfunction_id'])
+
+    def perform_create(self, serializer):
+        tpfunction = total.objects.get(pk=self.kwargs['function_pk'])
+        serializer.save(function=tpfunction)
+
 
 class DefectClassificationViewSet(viewsets.ModelViewSet):
     queryset = DefectClassification.objects.all()
     serializer_class = DefectClassificationSerializer
 
+    def get_queryset(self):
+        tpfunction_id = self.kwargs.get('function_pk')
+        return DefectClassification.objects.filter(function_id=tpfunction_id)
+        # return Coverage.objects.filter(function_id=self.kwargs['tpfunction_id'])
+
+    def perform_create(self, serializer):
+        tpfunction = DefectClassification.objects.get(pk=self.kwargs['function_pk'])
+        serializer.save(function=tpfunction)
+
 
 class UncoverageViewSet(viewsets.ModelViewSet):
     queryset = Uncoverage.objects.all()
     serializer_class = UncoverageSerializer
+
+    def get_queryset(self):
+        tefunction_id = self.kwargs.get('function_pk')
+        return Uncoverage.objects.filter(function_id=tefunction_id)
+        # return Coverage.objects.filter(function_id=self.kwargs['tpfunction_id'])
+
+    def perform_create(self, serializer):
+        tefunction = Uncoverage.objects.get(pk=self.kwargs['function_pk'])
+        serializer.save(function=tefunction)
+
+    
 
 
 class UploadSCGAsView(APIView):
@@ -198,14 +259,12 @@ class UploadSCGAsView(APIView):
 
         try:
             # load data from .pkl file
-            data = pickle.load(file)
-            if isinstance(data, list):
-                if not all(isinstance(item, dict) for item in data):
-                    return Response({"detail": "Invalid data format. Excepted a list of dictrionaries."}, status=status.HTTP_400_BAD_REQUEST)
-                for item in data:
+            scga_data = pickle.load(file)
+            if isinstance(scga_data, list):
+                if not all(isinstance(item, dict) for item in scga_data):
+                    return Response({"detail": "Invalid data format. Excepted a list of scga dictrionaries."}, status=status.HTTP_400_BAD_REQUEST)
+                for item in scga_data:
                     serializer = ScgaSerializer(data=item)
-                    import pdb
-                    pdb.set_trace()
                     if serializer.is_valid(raise_exception=True):
                         # serializer.save() is ensentially calling .create() or .update() method defined in Serializer class
                         # 1. in case the primary key of request data not match with any created data, the .create() method will be call to create a new object.
@@ -214,7 +273,7 @@ class UploadSCGAsView(APIView):
                     else:
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                 return Response({'detail': "SCGAs uploaded successfully"}, status=status.HTTP_201_CREATED)
-            elif isinstance(data, dict):
+            elif isinstance(scga_data, dict):
                 serializer = ScgaSerializer(data=item)
                 if serializer.is_valid():
                     serializer.save()
@@ -222,55 +281,3 @@ class UploadSCGAsView(APIView):
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-# class ScgaListCreate(generics.ListCreateAPIView):
-#     # query is all the object of scga
-#     queryset = Scga.objects.all()
-#     serializer_class = ScgaSerializer
-
-#     # override http methode delete()
-#     def delete(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-#         queryset.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# class ScgaRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Scga.objects.all()
-#     serializer_class = ScgaSerializer
-#     lookup_field = 'pk'  # primary key
-
-# class TestPlanListCreate(generics.ListCreateAPIView):
-#     # query is all the object of scga
-#     queryset = TestPlan.objects.all()
-#     serializer_class = TestPlanSerializer
-
-#     # override http methode delete()
-#     def delete(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-#         queryset.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# class TestPlanRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = TestPlan.objects.all()
-#     serializer_class = TestPlanSerializer
-#     lookup_field = 'pk'  # primary key
-
-
-# class TestExceptionListCreate(generics.ListCreateAPIView):
-#     # query is all the object of scga
-#     queryset = TestException.objects.all()
-#     serializer_class = TestExceptionSerializer
-
-#     # override http methode delete()
-#     def delete(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-#         queryset.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# class TestExceptionRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = TestException.objects.all()
-#     serializer_class = TestExceptionSerializer
-#     lookup_field = 'pk'  # primary key

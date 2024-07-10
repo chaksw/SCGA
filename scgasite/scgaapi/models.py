@@ -43,13 +43,13 @@ CHOICES_CLASS = (
     (OTHER, "Other"),
 )
 
-
+# set blank=True, null=True as no data must be not null
 class Scga(models.Model):
     file_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
     baseline = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
-        return self.file_name
+        return str(self.file_name)
 
 
 class Level(models.Model):
@@ -58,7 +58,7 @@ class Level(models.Model):
                              blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.level
+        return 'Level: ' + str(self.level)
 
 
 class TestPlan(models.Model):
@@ -72,7 +72,7 @@ class TestPlan(models.Model):
     # level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 
     def __str__(self):
-        self.sheet_name
+        return str(self.sheet_name)
 
 
 class TestException(models.Model):
@@ -86,7 +86,7 @@ class TestException(models.Model):
     # level = models.CharField(max_length=20, choices=CHOICES_LEVEL, default=NULL)
 
     def __str__(self):
-        self.sheet_name
+        return str(self.sheet_name)
 
 
 class LvTotalCoverage(models.Model):
@@ -101,13 +101,13 @@ class LvTotalCoverage(models.Model):
     test_plan = models.OneToOneField(TestPlan, to_field="id", related_name="lv_total_coverage",
                                      null=True, blank=True, on_delete=models.CASCADE)
 
-    def save(self, *args, **kwargs):
-        self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(
-            Decimal('0.01'), rounding=ROUND_HALF_UP)
-        self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(
-            Decimal('0.01'), rounding=ROUND_HALF_UP)
-        self.total_coverage = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(
+    #         Decimal('0.01'), rounding=ROUND_HALF_UP)
+    #     self.percent_coverage_Analysis = Decimal(self.percent_coverage_Analysis).quantize(
+    #         Decimal('0.01'), rounding=ROUND_HALF_UP)
+    #     self.total_coverage = Decimal(self.total_coverage).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    #     super().save(*args, **kwargs)
 
 
 class SCGAModule(models.Model):
@@ -121,7 +121,7 @@ class SCGAModule(models.Model):
                                        blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        self.module_name
+        return str(self.module_name)
 
 
 class SCGAFunction(models.Model):
@@ -145,7 +145,7 @@ class SCGAFunction(models.Model):
     uncoverage_count = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return self.function_name
+        return str(self.function_name)
 
 
 class Coverage(models.Model):
@@ -160,14 +160,14 @@ class Coverage(models.Model):
     function = models.OneToOneField(SCGAFunction, to_field="id", related_name="coverage",
                                     null=True, blank=True, on_delete=models.CASCADE)
 
-    def save(self, *args, **kwargs):
-        # 将值四舍五入到两位小数
-        self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(
-            Decimal('0.01'), rounding=ROUND_HALF_UP)
-        self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(
-            Decimal('0.01'), rounding=ROUND_HALF_UP)
-        self.total_coverage = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     # 将值四舍五入到两位小数
+    #     self.percent_coverage_MCDC = Decimal(self.percent_coverage_MCDC).quantize(
+    #         Decimal('0.01'), rounding=ROUND_HALF_UP)
+    #     self.percent_coverage_Analysis = Decimal(self.percent_coverage_MCDC).quantize(
+    #         Decimal('0.01'), rounding=ROUND_HALF_UP)
+    #     self.total_coverage = Decimal(self.percent_coverage_MCDC).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    #     super().save(*args, **kwargs)
 
 
 class Covered(models.Model):
