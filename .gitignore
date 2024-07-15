@@ -1,6 +1,6 @@
 SCGAs/*
 .vscode/*
-.node_modules/*
+node_modules/*
 # do not trace any __pychache__ files
 __pycache__/
 *.pyc
