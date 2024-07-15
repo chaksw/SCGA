@@ -499,7 +499,6 @@ class LevelSerializer(serializers.ModelSerializer):
             test_plan_data['level'] = level
             TestPlanSerializer.create(TestPlanSerializer(), validated_data=test_plan_data)
             # TestPlan.objects.create(level=level, **test_plan_data)
-        import pdb; pdb.set_trace()
         if test_exeception_data:
             test_exeception_data['level'] = level
             TestExceptionSerializer.create(TestExceptionSerializer(), validated_data=test_exeception_data)
