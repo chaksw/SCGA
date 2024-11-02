@@ -1,13 +1,17 @@
-# Ignore all items in xxx/ folder and itself in any folder
-SCGAs/*
-.vscode/*
-node_modules/*
-__pycache__/*
+# not trace any floders below:
+**/SCGAs/
+**/__pycache__/
+**/.DS_Store
+**/.vscode 
+**/venv/
+**/.venv/
+# Other typical entries
+**/node_modules/
+**/dist/
+**/build/
 # Ignore files end with .pyc, .sqlite3, .log in any folder
 **/*.pyc
 **/*.sqlite3
 **/*.log
-# Ignore .DS_Store in any folder
-**/.DS_Store
 # Ignore all instances of xxx.json in any folder
 # **/xxx.json
