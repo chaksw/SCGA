@@ -1,21 +1,37 @@
-from django.shortcuts import render
-from rest_framework import generics, status, viewsets, filters
+from django.core.files.uploadedfile import UploadedFile
+from rest_framework import status, viewsets
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
+from django_filters import rest_framework as filters
+import pickle
+
 from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
 from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, TestExceptionSerializer, LvTotalCoverageSerializer, TPModuleSerializer, TEModuleSerializer, TPFunctionSerializer, TEFunctionSerializer, CoverageSerializer, CoveredSerializer, totalSerializer, DefectClassificationSerializer, UncoverageSerializer
-from rest_framework.views import APIView
-from django.core.files.uploadedfile import UploadedFile
-import pickle
-from rest_framework.exceptions import ValidationError
 # Create your views here.
 
 # get_queryset() will be called for access of url (GET())
 # perform_create will be called for creation of data (POST()), it will execute in .create() once is_valid() return true
 # pk is more general. When you define a custom primary key field in a model, pk will always refer to this custom primary key, whereas id is the default field name.
+
+class ScgaFilter(filters.FilterSet):
+    baseline = filters.CharFilter(lookup_expr='icontains')
+
+    class Meta:
+        model = Scga
+        fields = ['baseline']
+
+
 class ScgaViewSet(viewsets.ModelViewSet):
     queryset = Scga.objects.all()
     serializer_class = ScgaSerializer
+    # 在 DRF 原有的配置中
+    # filter_backends = api_settings.DEFAULT_FILTER_BACKENDS
+    # 现基于 django-filter 进行新的配置
+    # 记得元组单个数据都是要加逗号 ,
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ScgaFilter
+
 
 
 class LevelViewSet(viewsets.ModelViewSet):

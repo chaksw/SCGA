@@ -1,11 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import ScgaList from '@/components/ScgaList.vue'
 
 const routes = [
   {
     path: '/',
     name: 'home',
     component: HomeView
+  },
+  {
+    path: '/scgas',
+    name: 'SCGA',
+    component: ScgaList
   },
   {
     path: '/about',

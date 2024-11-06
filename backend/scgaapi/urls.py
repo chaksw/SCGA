@@ -24,7 +24,7 @@ router.register(r"uncoverages", UncoverageViewSet, basename="uncoverages")
 # 比如: lookup = 'scga', 那么在level中，其主键SCGA的键值就默认为scga_pk，具体在嵌套url中，运行get_queryset()时，
 # 同时要注意的是，lookup 的值要与 level定义的 field值相同，否则会出现混乱
 
-# Nested router
+# Nested routers
 # scgas/{scga_id}/levels
 scgas_router = routers.NestedSimpleRouter(router, r'scgas', lookup='scga')
 scgas_router.register(r'levels', LevelViewSet, basename='scga-levels')
