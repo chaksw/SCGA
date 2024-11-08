@@ -12,7 +12,7 @@
 import ScgaList from '@/components/ScgaList.vue';
 
 export default {
-  name: 'HomeView',
+  name: 'Home',
   components: {
     ScgaList
   }

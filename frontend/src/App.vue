@@ -1,25 +1,25 @@
 <template>
-	<div class="flex flex-col h-screen">
-		<Header />
-		<div class="flex flex-1">
-			<Sidebar />
-			<main class="flex-1 p-4">
+	<div>
+		<v-app>
+			<Navbar />
+			<v-main>
 				<router-view></router-view>
-				<!-- For routing content -->
-			</main>
-		</div>
-		<Footer />
+			</v-main>
+			<Footer />
+		</v-app>
 	</div>
 </template>
 
 <script>
 import Header from "./components/Header.vue";
+import Navbar from "./components/Navbar.vue";
 import Sidebar from "./components/Sidebar.vue";
 import Footer from "./components/Footer.vue";
 
 export default {
 	components: {
 		Header,
+		Navbar,
 		Sidebar,
 		Footer,
 	},
