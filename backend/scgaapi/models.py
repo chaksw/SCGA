@@ -32,6 +32,7 @@ DEFENSIVE_CODE = 'DEFENSIVE_CODE'
 TEST_ENVIRONMENT_LIMITATIONS = 'TEST_ENVIRONMENT_LIMITATIONS'
 PREVIOUSLY_ANALYZED_SOFTWARE = 'PREVIOUSLY_ANALYZED_SOFTWARE'
 OTHER = 'OTHER'
+
 CHOICES_CLASS = (
     (NULL, ''),
     (INCOMPLETE_TESTS, "Incomplete Tests"),
@@ -44,6 +45,8 @@ CHOICES_CLASS = (
 )
 
 # set blank=True, null=True as no data must be not null
+
+
 class Scga(models.Model):
     file_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
     baseline = models.CharField(max_length=255, blank=True, null=True)
