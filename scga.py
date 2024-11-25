@@ -599,6 +599,65 @@ scga_json = None
 scga_pickle = None
 
 
+def prompt():
+    rootPath = ''
+    print(f'='*80)
+    selection1 = input(
+        "Welcom to SCGA extration:\n" +
+        "\t1. Extract new SCGA data group\n" +
+        "\t2. Add new SCGA data group\n" +
+        "\t3. Search function from existing SCGA data group\n" +
+        "Choose your operation: ")
+    print(f'='*80)
+    while not (int(selection1) == 1 or int(selection1) == 2 or int(selection1) == 3):
+        print("Wrong selection..")
+        selection2 = input(
+            "\t1. Extract new SCGA data group\n" +
+            "\t2. Add new SCGA data group\n" +
+            "\t3. Search function from existing SCGA data group\n" +
+            "Choose your operation: ")
+    else:
+        # create/add SCGA dataset
+        if int(selection2) == 1 or int(selection2) == 2:
+            rootPath = input("Please enter the root path: ")
+            while not os.path.isdir(rootPath):
+                rootPath = input(
+                    "Can not found this location, please enter the root path again: ")
+            else: return rootPath
+
+
+def post_SCGAs(rootPath, selection=2):
+    try:
+        excelApp = xw.App(visible=False, add_book=False)
+        # outputPath = os.path.join(rootPath, r'Output')
+        # outputPath.mkdir(parents=True, exist_ok=True)
+        scga_log_path = os.path.join(rootPath + r'/scga_log.txt')
+        scgas_json_path = os.path.join(rootPath + r'/scgas.json')
+        scga_pickle_path = os.path.join(rootPath + r'/scgas.pkl')
+        if int(selection) == 1:
+            scga_log_f = open(scga_log_path, 'w', encoding='UTF-8')
+            scga_json = open(scgas_json_path, 'w', encoding='UTF-8')
+            scga_pickle = open(scga_pickle_path, 'wb')
+        else:
+            scga_log_f = open(scga_log_path, 'a', encoding='UTF-8')
+            scgas_json_path = open(
+                scgas_json_path, 'a', encoding='UTF-8')
+            scga_pickle = open(scga_pickle_path, 'ab')
+        # read all SCGA excel from rootpath and output SCGAs dataset
+        SCGAs, scgas_functions_list = parser_SCGAs(
+            excelApp, rootPath)
+        # output function list of each SCGA as excel sheet
+        output_all_functions_as_sheet(
+            rootPath, scgas_functions_list)
+    except Exception as err:
+        # print(repr(keyerr))
+        print(traceback.print_exc())
+    finally:
+        excelApp.quit()
+        scga_log_f.close()
+        scga_json.close()
+        scga_pickle.close()
+
 def main():
     global scga_log_f, scga_json, scga_pickle
     print(f'='*80)
@@ -609,7 +668,6 @@ def main():
         "\t3. Search function from existing SCGA data group\n" +
         "Choose your operation: ")
     print(f'='*80)
-    global scga_log
     while not (int(selection) == 1 or int(selection) == 2 or int(selection) == 3):
         print("Wrong selection..")
         selection = input(
@@ -621,40 +679,11 @@ def main():
         # create/add SCGA dataset
         if int(selection) == 1 or int(selection) == 2:
             rootPath = input("Please enter the root path: ")
-            excelApp = xw.App(visible=False, add_book=False)
             while not os.path.isdir(rootPath):
                 rootPath = input(
                     "Can not found this location, please enter the root path again: ")
             else:
-                try:
-                    # outputPath = os.path.join(rootPath, r'Output')
-                    # outputPath.mkdir(parents=True, exist_ok=True)
-                    scga_log_path = os.path.join(rootPath + r'/scga_log.txt')
-                    scgas_json_path = os.path.join(rootPath + r'/scgas.json')
-                    scga_pickle_path = os.path.join(rootPath + r'/scgas.pkl')
-                    if int(selection) == 1:
-                        scga_log_f = open(scga_log_path, 'w', encoding='UTF-8')
-                        scga_json = open(scgas_json_path, 'w', encoding='UTF-8')
-                        scga_pickle = open(scga_pickle_path, 'wb')
-                    else:
-                        scga_log_f = open(scga_log_path, 'a', encoding='UTF-8')
-                        scgas_json_path = open(
-                            scgas_json_path, 'a', encoding='UTF-8')
-                        scga_pickle = open(scga_pickle_path, 'ab')
-                    # read all SCGA excel from rootpath and output SCGAs dataset
-                    SCGAs, scgas_functions_list = parser_SCGAs(
-                        excelApp, rootPath)
-                    # output function list of each SCGA as excel sheet
-                    output_all_functions_as_sheet(
-                        rootPath, scgas_functions_list)
-                except Exception as err:
-                    # print(repr(keyerr))
-                    print(traceback.print_exc())
-                finally:
-                    excelApp.quit()
-                    scga_log_f.close()
-                    scga_json.close()
-                    scga_pickle.close()
+                post_SCGAs(rootPath, selection)
         elif int(selection) == 3:
             rootPath = input("Please enter the root path of pickle file: ")
             while not os.path.isdir(rootPath):
