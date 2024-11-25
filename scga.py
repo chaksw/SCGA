@@ -594,36 +594,6 @@ def search_func(pkl_file_path, func_str):
         print(traceback.print_exc())
 
 
-scga_log_f = None
-scga_json = None
-scga_pickle = None
-
-
-def prompt():
-    rootPath = ''
-    print(f'='*80)
-    selection1 = input(
-        "Welcom to SCGA extration:\n" +
-        "\t1. Extract new SCGA data group\n" +
-        "\t2. Add new SCGA data group\n" +
-        "\t3. Search function from existing SCGA data group\n" +
-        "Choose your operation: ")
-    print(f'='*80)
-    while not (int(selection1) == 1 or int(selection1) == 2 or int(selection1) == 3):
-        print("Wrong selection..")
-        selection2 = input(
-            "\t1. Extract new SCGA data group\n" +
-            "\t2. Add new SCGA data group\n" +
-            "\t3. Search function from existing SCGA data group\n" +
-            "Choose your operation: ")
-    else:
-        # create/add SCGA dataset
-        if int(selection2) == 1 or int(selection2) == 2:
-            rootPath = input("Please enter the root path: ")
-            while not os.path.isdir(rootPath):
-                rootPath = input(
-                    "Can not found this location, please enter the root path again: ")
-            else: return rootPath
 
 
 def post_SCGAs(rootPath, selection=2):
@@ -657,6 +627,10 @@ def post_SCGAs(rootPath, selection=2):
         scga_log_f.close()
         scga_json.close()
         scga_pickle.close()
+
+scga_log_f = None
+scga_json = None
+scga_pickle = None
 
 def main():
     global scga_log_f, scga_json, scga_pickle
