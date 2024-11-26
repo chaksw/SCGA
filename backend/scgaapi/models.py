@@ -48,8 +48,11 @@ CHOICES_CLASS = (
 
 
 class Scga(models.Model):
+    project = models.CharField(max_length=255, blank=True, null=True)
+    function = models.CharField(max_length=255, blank=True, null=True)
     file_name = models.CharField(max_length=255, unique=True, blank=True, null=True)
     baseline = models.CharField(max_length=255, blank=True, null=True)
+    current = models.CharField(max_length=5, choices=CHOICES_YN, default='Y', blank=True, null=True)
 
     def __str__(self):
         return str(self.file_name)

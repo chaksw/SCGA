@@ -1,21 +1,18 @@
 import { createApp } from "vue";
+import "@/assets/css/tailwind.css";
+import "@/style.css"
+import ElementPlus from "element-plus";
+import "element-plus/dist/index.css";
+import * as ElementPlusIconsVue from "@element-plus/icons-vue"
+import router from "@/router";
+import App from "@/App.vue";
 
-// Vuetify
-import 'vuetify/styles'
-import { createVuetify } from "vuetify";
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
-// import 'material-design-icons-iconfont/dist/material-design-icons.css';
+const app = createApp(App);
 
-
-import App from "./App.vue";
-import router from "./router";
-import store from "./store";
-import "./assets/css/main.css";
-
-const vuetify = createVuetify({
-    components,
-    directives,
-})
-
-createApp(App).use(store).use(router).use(vuetify).mount("#app");
+for(const [key, component] of Object.entries(ElementPlusIconsVue)){
+    app.component(key, component)
+}
+app.use(router);
+app.use(ElementPlus)
+app.mount("#app");
+// createApp(App).mount('#app')

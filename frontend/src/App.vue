@@ -1,31 +1,16 @@
 <template>
-	<div>
-		<v-app>
-			<Navbar />
-			<v-main>
-				<router-view></router-view>
-			</v-main>
-			<Footer />
-		</v-app>
-	</div>
+	<el-container>
+		<!-- header -->
+		<el-header>
+			<navigation />
+		</el-header>
+		<router-view />
+	</el-container>
+	<!-- <el-footer>Footer</el-footer> -->
 </template>
 
-<script>
-import Header from "./components/Header.vue";
-import Navbar from "./components/Navbar.vue";
-import Sidebar from "./components/Sidebar.vue";
-import Footer from "./components/Footer.vue";
-
-export default {
-	components: {
-		Header,
-		Navbar,
-		Sidebar,
-		Footer,
-	},
-};
+<script setup>
+	import navigation from "@/components/navBar.vue";
 </script>
 
-<style>
-/* Additional global styles if needed */
-</style>
+<style lang="css" scoped></style>

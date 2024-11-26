@@ -516,6 +516,9 @@ class ScgaSerializer(serializers.ModelSerializer):
         model = Scga
         fields = (
             'id',
+            'project',
+            'function',
+            'current',
             'file_name',
             'baseline',
             'levels',

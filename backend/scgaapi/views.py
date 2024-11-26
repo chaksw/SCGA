@@ -5,6 +5,9 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
 from django_filters import rest_framework as filters
 import pickle
+import json
+import os
+from utils import scga as scgaUtil
 
 from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
 from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, TestExceptionSerializer, LvTotalCoverageSerializer, TPModuleSerializer, TEModuleSerializer, TPFunctionSerializer, TEFunctionSerializer, CoverageSerializer, CoveredSerializer, totalSerializer, DefectClassificationSerializer, UncoverageSerializer
@@ -262,40 +265,66 @@ class UncoverageViewSet(viewsets.ModelViewSet):
         serializer.save(function=tefunction)
 
     
-
+def serializerScgaPkl(file_):
+    try:
+        # load data from .pkl file
+        scga_data = pickle.load(file_)
+        if isinstance(scga_data, list):
+            if not all(isinstance(item, dict) for item in scga_data):
+                return {"detail": "Invalid data format. Excepted a list of scga dictrionaries.", 'status': status.HTTP_400_BAD_REQUEST}
+            for item in scga_data:
+                serializer = ScgaSerializer(data=item)
+                if serializer.is_valid(raise_exception=True):
+                    # serializer.save() is ensentially calling .create() or .update() method defined in Serializer class
+                    # 1. in case the primary key of request data not match with any created data, the .create() method will be call to create a new object.
+                    # 2. in case the primary key of request data already exsit in created data, the .update() methode will be call to update the corresponding data object
+                    serializer.save()
+                else:
+                    return {'detail': serializer.errors, 'status': status.HTTP_400_BAD_REQUEST}
+            return {'detail': "SCGAs uploaded successfully", 'status': status.HTTP_201_CREATED}
+        elif isinstance(scga_data, dict):
+            serializer = ScgaSerializer(data=item)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return {'detail': serializer.errors, 'status': status.HTTP_400_BAD_REQUEST}
+    except Exception as e:
+        return {'detail': str(e), 'status': status.HTTP_500_INTERNAL_SERVER_ERROR}
 
 class UploadSCGAsView(APIView):
     def post(self, request, *args, **kwargs):
-        file = request.FILES.get('file')
-        if not file or not isinstance(file, UploadedFile):
-            return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
+        if json.loads(request.body): # handle multiple scgas
+            data = json.loads(request.body)
+            print(data)
+            info = {
+                "project": data['project'],
+                "function": data['function'],
+                "current": data['current'],
+            }
+            response = scgaUtil.post_SCGAs(data['path'], 1, info)
+            if response:
+                if response['result'] == 'success':
+                    for filename in os.listdir(data['path']):
+                        if filename.endswith('.pkl'):
+                            import pdb; pdb.set_trace()
+                            scga_pkl_file = os.path.join(data['path'], filename)
+                            with open(scga_pkl_file, 'rb') as f:
+                                response = serializerScgaPkl(f)
+                            return Response(response['detail'], status=response['status'])
+                elif response['result'] == 'error':
+                    return Response(response['detail'], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
+        elif request.FILES.get('file'):  # handle one 
+            file_ = request.FILES.get('file')
+            print("file: ", file_)
+            if not file_ or not isinstance(file_, UploadedFile):
+                return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
+            elif file_.name.endswith('.xlsm'):
+                pass
+            elif file_.name.endswith('.pkl'):
+                response = serializerScgaPkl(file_) # parser scga pkl file
+                return Response(response['detail'], status=response['status'])
+                    
+            else:
+                return Response({"detail": "Invalid file format. Please upload a .pkl or .xlsm file."}, status=status.HTTP_400_BAD_REQUEST)
+                
 
-        if not file.name.endswith('.pkl'):
-            return Response({"detail": "Invalid file format. Please upload a .pkl file."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            # load data from .pkl file
-            scga_data = pickle.load(file)
-            if isinstance(scga_data, list):
-                if not all(isinstance(item, dict) for item in scga_data):
-                    return Response({"detail": "Invalid data format. Excepted a list of scga dictrionaries."}, status=status.HTTP_400_BAD_REQUEST)
-                for item in scga_data:
-                    serializer = ScgaSerializer(data=item)
-                    if serializer.is_valid(raise_exception=True):
-                        # serializer.save() is ensentially calling .create() or .update() method defined in Serializer class
-                        # 1. in case the primary key of request data not match with any created data, the .create() method will be call to create a new object.
-                        # 2. in case the primary key of request data already exsit in created data, the .update() methode will be call to update the corresponding data object
-                        serializer.save()
-                    else:
-                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                return Response({'detail': "SCGAs uploaded successfully"}, status=status.HTTP_201_CREATED)
-            elif isinstance(scga_data, dict):
-                serializer = ScgaSerializer(data=item)
-                if serializer.is_valid():
-                    serializer.save()
-                else:
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-            
