@@ -265,10 +265,10 @@ class UncoverageViewSet(viewsets.ModelViewSet):
         serializer.save(function=tefunction)
 
     
-def serializerScgaPkl(file_):
+def serializerScgaPkl(scga_data):
     try:
         # load data from .pkl file
-        scga_data = pickle.load(file_)
+        
         if isinstance(scga_data, list):
             if not all(isinstance(item, dict) for item in scga_data):
                 return {"detail": "Invalid data format. Excepted a list of scga dictrionaries.", 'status': status.HTTP_400_BAD_REQUEST}
@@ -293,35 +293,39 @@ def serializerScgaPkl(file_):
 
 class UploadSCGAsView(APIView):
     def post(self, request, *args, **kwargs):
-        if json.loads(request.body): # handle multiple scgas
-            data = json.loads(request.body)
-            print(data)
-            info = {
-                "project": data['project'],
-                "function": data['function'],
-                "current": data['current'],
-            }
+        data = json.loads(request.body)
+        info = {
+            "project": data['project'],
+            "function": data['function'],
+            "current": data['current'],
+        }
+        if data['path']: # handle multiple scgas
+            
             response = scgaUtil.post_SCGAs(data['path'], 1, info)
             if response:
                 if response['result'] == 'success':
-                    for filename in os.listdir(data['path']):
-                        if filename.endswith('.pkl'):
-                            import pdb; pdb.set_trace()
-                            scga_pkl_file = os.path.join(data['path'], filename)
-                            with open(scga_pkl_file, 'rb') as f:
-                                response = serializerScgaPkl(f)
-                            return Response(response['detail'], status=response['status'])
+                    # print(response['data'])
+                    # import pdb; pdb.set_trace()
+                    # for filename in os.listdir(data['path']):
+                    #     if filename.endswith('.pkl'):
+                    #         scga_pkl_file = os.path.join(data['path'], filename)
+                    #         with open(scga_pkl_file, 'rb') as f:
+                    #           response = serializerScgaPkl(f)
+                    response = serializerScgaPkl(response['data'])
+                    return Response(response['detail'], status=response['status'])
                 elif response['result'] == 'error':
                     return Response(response['detail'], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
-        elif request.FILES.get('file'):  # handle one 
-            file_ = request.FILES.get('file')
-            print("file: ", file_)
+        elif data['file']:  # handle one 
+            file_ = data['file']
+            # file_ = request.FILES.get('file')
+            # print("file: ", file_)
             if not file_ or not isinstance(file_, UploadedFile):
                 return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
             elif file_.name.endswith('.xlsm'):
                 pass
             elif file_.name.endswith('.pkl'):
-                response = serializerScgaPkl(file_) # parser scga pkl file
+                scga_data = pickle.load(file_)
+                response = serializerScgaPkl(scga_data) # parser scga pkl file
                 return Response(response['detail'], status=response['status'])
                     
             else:

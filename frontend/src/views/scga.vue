@@ -139,10 +139,10 @@
 			.get(url)
 			.then((response) => {
 				if (response.data) {
-					data.value = response.data.results;
+					data.value = locateCurrent(response.data.results)
 					// console.log(data.value);
-					baseline.value = data.value[0].baseline;
-					levels.value = data.value[0].levels;
+					baseline.value = data.value.baseline;
+					levels.value = data.value.levels;
 					levels.value.baseline = baseline.value;
 				}
 			})
@@ -150,6 +150,14 @@
 				console.log(error);
 			});
 	};
+
+	const locateCurrent = (scgasData) => {
+		for (const scga of scgasData){
+			if (scga.current === 'Y'){
+				return scga
+			}
+		}
+	}
 
 	provide("baseline", baseline);
 	provide("levels", levels);

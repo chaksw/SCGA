@@ -5,6 +5,18 @@
 			<!-- Title & buttons -->
 			<el-container class="sidebar-horizontal-header-content">
 				<p>{{ baseline }}</p>
+				<el-tooltip
+					class="box-item"
+					effect="dark"
+					content="Import SCGA"
+					placement="bottom"
+					><el-button
+						circle
+						v-if="!isImported"
+						@click="importScgaDialogVisible = true"
+						><el-icon><Plus /></el-icon></el-button
+				></el-tooltip>
+
 				<!-- configure buttons -->
 				<el-dropdown trigger="click" v-if="isImported">
 					<span class="el-dropdown-link">
@@ -38,39 +50,90 @@
 						</el-dropdown-menu>
 					</template>
 				</el-dropdown>
-
-				<!-- <el-tooltip
-				class="box-item"
-				effect="dark"
-				content="Configure PAS SCGA Dataset"
-				placement="bottom"
-			>
-				<el-button text>Configure</el-button></el-tooltip
-			> -->
 			</el-container>
 			<!-- import button -->
 			<!-- ref 是 Vue 提供的一个指令，用来直接引用 DOM 元素或组件实例，便于在脚本中操作它们。可以理解为一种快捷的方式来访问特定的 DOM 或组件。 -->
 			<!-- ref="upload" 会将当前的 el-upload 组件实例引用到 setup 或 data 中定义的 ref 对象上。 -->
-			<el-container class="import-area" v-if="!isImported">
-				<el-upload
-					ref="upload"
-					style="display: flex"
-					:on-change="handleChange"
-					:on-exceed="handleExceed"
-					:before-remove="beforeRemove"
-					:limit="1"
-					:auto-upload="false">
-					<el-button>Import</el-button>
-				</el-upload>
-
-				<el-button v-if="isUploading" @click="submitUpload"
-					><el-icon><Select /></el-icon
-				></el-button>
-			</el-container>
 
 			<el-divider style="margin: 10px 0 0 0"></el-divider>
 		</el-container>
 
+		<!-- current scga import dialog -->
+		<el-dialog v-model="importScgaDialogVisible" width="500">
+			<template #header>
+				<div class="drawer-header">
+					<el-icon style="padding-right: 7px; font-size: 24px"
+						><Plus
+					/></el-icon>
+					<h4>SCGA Import</h4>
+				</div>
+			</template>
+			<el-form ref="ruleFormRef" :model="scgaForm" :rules="rules">
+				<el-form-item
+					prop="project"
+					label="Project: "
+					:label-width="importFormLabelWidth"
+					label-position="left">
+					<el-select
+						clearable
+						v-model="scgaForm.project"
+						placeholder="Please select the Project">
+						<el-option label="CA22" value="CA22" />
+						<el-option label="GS" value="GS" />
+					</el-select>
+				</el-form-item>
+				<el-form-item
+					prop="function"
+					label="Function: "
+					:label-width="importFormLabelWidth"
+					label-position="left">
+					<el-select
+						clearable
+						v-model="scgaForm.function"
+						placeholder="Please select the Function">
+						<el-option label="GGF" value="GGF" />
+						<el-option label="MWF" value="MWF" />
+						<el-option label="UTIL" value="UTIL" />
+					</el-select>
+				</el-form-item>
+				<el-form-item
+					prop="file"
+					label=""
+					:label-width="0"
+					label-position="left">
+					<el-upload
+						ref="upload"
+						:on-change="handleChange"
+						:on-exceed="handleExceed"
+						:before-remove="beforeRemove"
+						:limit="1"
+						:auto-upload="false">
+						<template #trigger>
+							<el-button type="success">Select file</el-button>
+						</template>
+						<template #tip>
+							<div class="el-upload__tip">
+								SCGA file with format *.pkl | *.xlsm
+							</div>
+						</template>
+					</el-upload>
+				</el-form-item>
+			</el-form>
+			<template #footer>
+				<div class="dialog-footer">
+					<el-button @click="handleCancel('Import')"
+						>Cancel</el-button
+					>
+					<el-button
+						type="primary"
+						@click="handleSubmitImport(ruleFormRef)">
+						Confirm
+					</el-button>
+				</div>
+			</template>
+		</el-dialog>
+
+		<!-- pas scga configuration drawer -->
 		<el-drawer
 			v-model="configureDrawerVisible"
 			:direction="direction"
@@ -87,7 +150,7 @@
 				<el-form-item
 					prop="project"
 					label="Project: "
-					:label-width="formLabelWidth"
+					:label-width="configFormLabelWidth"
 					label-position="left">
 					<el-select
 						clearable
@@ -100,7 +163,7 @@
 				<el-form-item
 					prop="function"
 					label="Function: "
-					:label-width="formLabelWidth"
+					:label-width="configFormLabelWidth"
 					label-position="left">
 					<el-select
 						clearable
@@ -114,7 +177,7 @@
 				<el-form-item
 					prop="path"
 					label="SCGAs Path: "
-					:label-width="formLabelWidth"
+					:label-width="configFormLabelWidth"
 					label-position="left">
 					<el-input
 						clearable
@@ -156,13 +219,10 @@
 	// 这里的upload只作为组件实例，只包含一些clearFiles(), submit()等方法，不能用于发送请求
 	const upload = ref(null); // instance of import
 	let importFile = null; // 存储选中的文件
-	const isUploading = ref(false);
 	const fileName = ref(null);
 	const baseline = inject("baseline");
 	const isImported = ref(false);
 
-	// pas scga configuration dialog
-	const configureDrawerVisible = ref(false);
 	const ruleFormRef = ref();
 	const rules = reactive({
 		project: [
@@ -186,30 +246,41 @@
 				trigger: "blur",
 			},
 		],
+		file: [
+			{
+				required: true,
+				message: "Please choose the scga file",
+				trigger: "blur",
+			},
+		],
 	});
-	const formLabelWidth = "120px";
+	const configFormLabelWidth = "120px";
+	const importFormLabelWidth = "120px";
+
+	// current scga import dialog
+	const importScgaDialogVisible = ref(false);
+	const scgaForm = reactive({
+		project: "",
+		function: "",
+		file: "",
+		current: true,
+	});
+
+	// pas scga configuration drawer
+	const configureDrawerVisible = ref(false);
+
 	const pasScgasForm = reactive({
 		project: "",
 		function: "",
 		path: "",
-		current: false
+		current: false,
 	});
 
 	const handleChange = (uploadFile, uploadFiles) => {
-		isUploading.value = uploadFile.name ? true : false;
 		importFile = uploadFile.raw;
 		fileName.value = uploadFile.name;
-		// console.log(importFile);
+		console.log(fileName.value);
 	};
-
-	onMounted(() => {
-		isUploading.value = false;
-		isImported.value = baseline.value === "SCGA Workspace" ? false : true;
-	});
-
-	watch(() => {
-		isImported.value = baseline.value === "SCGA Workspace" ? false : true;
-	});
 
 	const handleExceed = (files) => {
 		upload.value.clearFiles();
@@ -218,7 +289,7 @@
 		upload.value.handleStart(file);
 	};
 
-	const submitUpload = async () => {
+	const submitImport = async () => {
 		await ElMessageBox.confirm(`Confirm the import of ${fileName.value} ?`);
 
 		// create form
@@ -235,7 +306,6 @@
 			})
 			.then((response) => {
 				// console.log(upload.value);
-				isUploading.value = false;
 				ElMessage.success(
 					`File ${fileName.value} import successfully!`
 				);
@@ -261,7 +331,6 @@
 			`Cancel the import of ${uploadFile.name} ?`
 		).then(
 			() => {
-				isUploading.value = false;
 				upload.value.clearFiles();
 				ElMessage.info("File upload canceled");
 				true;
@@ -272,6 +341,7 @@
 
 	const handleCancel = (cancelInfo) => {
 		configureDrawerVisible.value = false;
+		importScgaDialogVisible.value = false;
 		ElMessage({
 			type: "info",
 			message: `${cancelInfo} cancaled.`,
@@ -287,10 +357,6 @@
 				)
 					.then(() => {
 						console.log("scga", pasScgasForm);
-						// create form
-						// const formData = new FormData(pasScgasForm);
-						// send to backend
-						// console.log("formData", formData);
 						axios
 							.post("api/upload-scgas/", pasScgasForm, {
 								headers: {
@@ -307,14 +373,18 @@
 								);
 							}) // axios post request error
 							.catch((error) => {
-								
-								console.error("Configure error: ", error.response.data);
-								ElMessage.error(`Fail to configure. ${error.response.data}`);
+								console.error(
+									"Configure error: ",
+									error.response.data
+								);
+								ElMessage.error(
+									`Fail to configure. ${error.response.data}`
+								);
 							});
 					}) // submit error
 					.catch((error) => {
 						// do nothing
-						ElMessage.error(error)
+						ElMessage.error(error);
 						console.log(error);
 					});
 			} else {
@@ -322,6 +392,25 @@
 			}
 		});
 	};
+
+	const handleSubmitImport = async (formEl) => {
+		if (!formEl) return;
+		await formEl.validate((valid, fields) => {
+			if (valid) {
+				submitImport();
+			} else {
+				console.log("error submit", fields);
+			}
+		});
+	};
+
+	onMounted(() => {
+		isImported.value = baseline.value === "SCGA Workspace" ? false : true;
+	});
+
+	watch(() => {
+		isImported.value = baseline.value === "SCGA Workspace" ? false : true;
+	});
 </script>
 
 <style lang="css" scoped>

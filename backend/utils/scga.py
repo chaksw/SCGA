@@ -40,8 +40,77 @@ def output_log(str_=None):
     # print(str_)
     print(str_, file=scga_log_f)
 
+def read_info_behind_coverages(info, level):
+    defect_classification = {
+        'tech': None,
+        'non_tech': None,
+        'process': None,
+    }
+    if level == 'A':
+        covered = {
+            'branches': 0,
+            'pairs': 0,
+            'statement': 0
+        }
+        total = {
+            'branches': 0,
+            'pairs': 0,
+            'statement': 0
+        }
+        # total module strcuture data
+        total['branches'] = int(info[14])
+        total['pairs'] = int(info[15])
+        total['statement'] = int(info[16])
+        # covered module strcuture data
+        covered['branches'] = int(info[11])
+        covered['pairs'] = int(info[12])
+        covered['statement'] = int(info[13])
 
-def read_plan(test_plan_sheet, rows):
+        # defect _classification
+        defect_classification['tech'] = info[18]
+        defect_classification['non_tech'] = info[19]
+        defect_classification['process'] = info[20]
+    elif level == 'B':
+        covered = {
+            'branches': 0,
+            'statement': 0
+        }
+        total = {
+            'branches': 0,
+            'statement': 0
+        }
+        # total module strcuture data
+        total['branches'] = int(info[13])
+        total['statement'] = int(info[14])
+        # covered module strcuture data
+        covered['branches'] = int(info[11])
+        covered['statement'] = int(info[12])
+        
+
+        # defect _classification
+        defect_classification['tech'] = info[16]
+        defect_classification['non_tech'] = info[17]
+        defect_classification['process'] = info[18]
+    elif level == 'C':
+        covered = {
+            'statement': 0
+        }
+        total = {
+            'statement': 0
+        }
+        # total module strcuture data
+        total['statement'] = int(info[11])
+        # covered module strcuture data
+        covered['statement'] = int(info[10])
+
+        # defect _classification
+        defect_classification['tech'] = info[14]
+        defect_classification['non_tech'] = info[15]
+        defect_classification['process'] = info[16]
+
+    return covered, total, defect_classification
+
+def read_plan(test_plan_sheet, rows, level):
     """Read test plan inforamtions of scga sheet
 
     Args:
@@ -70,121 +139,89 @@ def read_plan(test_plan_sheet, rows):
         'process': None,
         'functions': []
     }
-    for curRow in range(7, rows + 2):
-        range_ = f"{f'A{curRow}'}:{f'U{curRow}'}"
-        info = test_plan_sheet.range(range_).options(transpose=True).value
-        if info[1] is None:
-            if info[0] == 'Level Total':
-                level_total_coverage['percent_coverage_MCDC'] = info[7]
-                level_total_coverage['percent_coverage_Analysis'] = info[8]
-                level_total_coverage['total_coverage'] = info[9]
-                continue
+    try:
+        for curRow in range(7, rows + 2):
+            range_ = f"{f'A{curRow}'}:{f'U{curRow}'}"
+            info = test_plan_sheet.range(range_).options(transpose=True).value
+            if info[1] is None:
+                if info[0] == 'Level Total':
+                    level_total_coverage['percent_coverage_MCDC'] = info[7]
+                    level_total_coverage['percent_coverage_Analysis'] = info[8]
+                    level_total_coverage['total_coverage'] = info[9]
+                    continue
+                else:
+                    continue
+            function = {
+                'function_name': None,
+                'analyst': None,
+                'site': None,
+                'start_date': None,
+                'coverage': {},
+                'covered': {},
+                'total': {},
+                # 'moduleStrucData': {},
+                'oversight': None,
+                'defect_classification': {}
+            }
+            coverage = {
+                'percent_coverage_MCDC': 0,
+                'percent_coverage_Analysis': 0,
+                'total_coverage': 0,
+            }
+            
+            # see if info a new module line
+            if module['module_name'] != info[1]:
+
+                if module['module_name'] is not None and module['module_name'] not in modules_name_list:
+                    modules_name_list.append(module['module_name'])
+                    modules.append(module)
+                module = {
+                    'module_name': None,
+                    'functions': []
+                }
+                module['process'] = info[0]
+                module['module_name'] = info[1]
+            
+            function['covered'], function['total'], function['defect_classification'] = read_info_behind_coverages(info, level)
+            
+            # coverage
+            coverage['percent_coverage_MCDC'] = info[7]
+            coverage['percent_coverage_Analysis'] = info[8]
+            coverage['total_coverage'] = info[9]
+            # function
+            function['function_name'] = info[2]
+            function['analyst'] = info[4]
+            function['site'] = info[5]
+            # strfy datetime
+            if isinstance(info[6], datetime.datetime):
+                function['start_date'] = info[6].strftime("%Y-%m-%d")
             else:
-                continue
-        function = {
-            'function_name': None,
-            'analyst': None,
-            'site': None,
-            'start_date': None,
-            'coverage': {},
-            'covered': {},
-            'total': {},
-            # 'moduleStrucData': {},
-            'oversight': None,
-            'defect_classification': {}
-        }
-        coverage = {
-            'percent_coverage_MCDC': 0,
-            'percent_coverage_Analysis': 0,
-            'total_coverage': 0,
-        }
-        # module_structure_data = {
-        #     'covered': {},
-        #     'total': {},
-        # }
-        covered = {
-            'branches': 0,
-            'pairs': 0,
-            'statement': 0
-        }
-        total = {
-            'branches': 0,
-            'pairs': 0,
-            'statement': 0
-        }
+                function['start_date'] = info[6]
+            function['coverage'] = coverage
 
-        defect_classification = {
-            'tech': None,
-            'non_tech': None,
-            'process': None,
-        }
-        # see if info a new module line
-        if module['module_name'] != info[1]:
-
-            if module['module_name'] is not None and module['module_name'] not in modules_name_list:
-                modules_name_list.append(module['module_name'])
+            # see if info a new module line
+            if info[1] not in modules_name_list or len(modules) == 0:
+                module = {
+                    'module_name': None,
+                    'functions': []
+                }
+                module['process'] = info[0]
+                module['module_name'] = info[1]
+                module['functions'].append(function)
+                functions_name_list.append(function['function_name'])
+                total_function = total_function + 1
                 modules.append(module)
-            module = {
-                'module_name': None,
-                'functions': []
-            }
-            module['process'] = info[0]
-            module['module_name'] = info[1]
-        # oversight
-        function['oversight'] = info[17]
-        # defect _classification
-        defect_classification['tech'] = info[18]
-        defect_classification['non_tech'] = info[19]
-        defect_classification['process'] = info[20]
-        # total module strcuture data
-        total['branches'] = info[14]
-        total['pairs'] = info[15]
-        total['statement'] = info[16]
-        # covered module strcuture data
-        covered['branches'] = info[11]
-        covered['pairs'] = info[12]
-        covered['statement'] = info[13]
-        # module strcuture data
-        function['total'] = total
-        function['covered'] = covered
-        # coverage
-        coverage['percent_coverage_MCDC'] = info[7]
-        coverage['percent_coverage_Analysis'] = info[8]
-        coverage['total_coverage'] = info[9]
-        # function
-        function['function_name'] = info[2]
-        function['analyst'] = info[4]
-        function['site'] = info[5]
-        # strfy datetime
-        if isinstance(info[6], datetime.datetime):
-            function['start_date'] = info[6].strftime("%Y-%m-%d")
-        else:
-            function['start_date'] = info[6]
-        function['coverage'] = coverage
-        # function['moduleStrucData'] = module_structure_data
-        function['oversight'] = info[17]
-        function['defect_classification'] = defect_classification
-
-        # see if info a new module line
-        if info[1] not in modules_name_list or len(modules) == 0:
-            module = {
-                'module_name': None,
-                'functions': []
-            }
-            module['process'] = info[0]
-            module['module_name'] = info[1]
-            module['functions'].append(function)
-            functions_name_list.append(function['function_name'])
-            total_function = total_function + 1
-            modules.append(module)
-            modules_name_list.append(module['module_name'])
-        # in case module already exist, add function to corresponding module
-        else:
-            for index, module_name in enumerate(modules_name_list):
-                if module_name == str(module['module_name']):
-                    (modules[index])['functions'].append(function)
-                    functions_name_list.append(function['function_name'])
-                    total_function = total_function + 1
+                modules_name_list.append(module['module_name'])
+            # in case module already exist, add function to corresponding module
+            else:
+                for index, module_name in enumerate(modules_name_list):
+                    if module_name == str(module['module_name']):
+                        (modules[index])['functions'].append(function)
+                        functions_name_list.append(function['function_name'])
+                        total_function = total_function + 1
+    except Exception as e:
+        import pdb; pdb.set_trace()
+        print(traceback.print_exc())
 
     # write into log file
     output_log(
@@ -368,12 +405,12 @@ def read_SCGA(app, scga_path, info=NULL):
                     'test_plan': {},
                     'test_exception': {},
                 }
-            # point to file end
+            # locate to file end
             scga_log_f.seek(0, 2)
             output_log(f'='*60)
             output_log(f'extration of {currentSheet.name}')
             Level['level'] = str(currentSheet.name).split(' ')[1]
-            if 'Plan' in currentSheet.name:
+            if 'Plan' in currentSheet.name: # read test plan
                 test_plan = {
                     'sheet_name': None,
                     'modules': [],
@@ -384,7 +421,7 @@ def read_SCGA(app, scga_path, info=NULL):
                     test_plan['sheet_name'] = currentSheet.name
                     # test_plan['level'] = str(currentSheet.name).split(' ')[1]
                     test_plan['modules'], test_plan['lv_total_coverage'], function_list = read_plan(
-                        currentSheet, rows)
+                        currentSheet, rows,  Level['level'])
                     if len(test_plan['modules']) != 0:
                         Level['test_plan'] = test_plan
                         if Level['level'] == 'A':
@@ -402,7 +439,7 @@ def read_SCGA(app, scga_path, info=NULL):
                     output_log(
                         f'* SCGA Test Plan information not found in {currentSheet.name}')
                 READ_PLAN = True
-            elif 'Exceptions' in currentSheet.name:
+            elif 'Exceptions' in currentSheet.name: # read test exception
                 test_exception = {
                     'sheet_name': None,
                     # 'level': None,
@@ -421,7 +458,7 @@ def read_SCGA(app, scga_path, info=NULL):
                     output_log(
                         f'* SCGA Test Execptions information not found in {currentSheet.name}')
                 READ_EXCEPTION = True
-            if READ_PLAN and READ_EXCEPTION:
+            if READ_PLAN and READ_EXCEPTION and Level['test_plan']: # append only if test plan is not null
                 SCGA['levels'].append(Level)
                 READ_PLAN = False
                 READ_EXCEPTION = False
@@ -631,11 +668,12 @@ def post_SCGAs(rootPath, selection=2, info=NULL):
             # output function list of each SCGA as excel sheet
             output_all_functions_as_sheet(
                 rootPath, scgas_functions_list)
-            return {"result": "success", "detail": "parser completed"}
+            return {"result": "success", "detail": "parser completed", "data": SCGAs}
         except Exception as err:
             # print(repr(keyerr))
             import pdb; pdb.set_trace()
             print(traceback.print_exc())
+            return {"result": "error", "detail": traceback.print_exc()}
         finally:
             excelApp.quit()
             scga_log_f.close()

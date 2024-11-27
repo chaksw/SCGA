@@ -116,10 +116,10 @@ class totalSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         # check key and value
-        if data['branches'] != 0 and ('branches' not in data):
-            raise serializers.ValidationError('branches cannot be empty')
-        if data['pairs'] != 0 and ('pairs' not in data):
-            raise serializers.ValidationError('pairs cannot be empty')
+        # if data['branches'] != 0 and ('branches' not in data):
+        #     raise serializers.ValidationError('branches cannot be empty')
+        # if data['pairs'] != 0 and ('pairs' not in data):
+        #     raise serializers.ValidationError('pairs cannot be empty')
         if data['statement'] != 0 and ('statement' not in data):
             raise serializers.ValidationError('statement cannot be empty')
         return data
@@ -138,10 +138,10 @@ class CoveredSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         # check key and value
-        if data['branches'] != 0 and ('branches' not in data):
-            raise serializers.ValidationError('branches cannot be empty')
-        if data['pairs'] != 0 and ('pairs' not in data):
-            raise serializers.ValidationError('pairs cannot be empty')
+        # if data['branches'] != 0 and ('branches' not in data):
+        #     raise serializers.ValidationError('branches cannot be empty')
+        # if data['pairs'] != 0 and ('pairs' not in data):
+        #     raise serializers.ValidationError('pairs cannot be empty')
         if data['statement'] != 0 and ('statement' not in data):
             raise serializers.ValidationError('statement cannot be empty')
         return data

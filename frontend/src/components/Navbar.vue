@@ -6,11 +6,11 @@
 					<el-icon><Menu /></el-icon>
 				</a>
 			</el-menu-item>
-			<el-menu-item index="1" class="menu-item">
-				<a href="/scga">
-					SCGA
-				</a>
-			</el-menu-item>
+			<el-sub-menu index="1">
+				<template #title><a href="/scga" style="font-size: 16px"> SCGA </a></template>
+				<el-menu-item index="1-1">Currently Working</el-menu-item>
+				<el-menu-item index="1-2">All Imported SCGA </el-menu-item>
+			</el-sub-menu>
 			<el-menu-item index="2" class="menu-item">TRS</el-menu-item>
 
 			<el-menu-item index="3" class="menu-item">RA</el-menu-item>

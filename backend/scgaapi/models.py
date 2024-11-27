@@ -203,13 +203,13 @@ class DefectClassification(models.Model):
 class Uncoverage(models.Model):
     function = models.ForeignKey(SCGAFunction, to_field="id", related_name="uncoverages",
                                  blank=True, null=True, on_delete=models.CASCADE)
-    uncovered_sw_line = models.CharField(max_length=255, blank=True, null=True)
+    uncovered_sw_line = models.TextField(blank=True, null=True)
     uncovered_instrument_sw_line = models.TextField(default=NULL, blank=True, null=True)
-    requirement_id = models.CharField(max_length=255, blank=True, null=True)
+    requirement_id = models.TextField(blank=True, null=True)
     _class = models.CharField(max_length=255, choices=CHOICES_CLASS, default=NULL, blank=True, null=True)
-    analysis_summary = models.CharField(max_length=255, default=NULL, blank=True, null=True)
-    correction_summary = models.CharField(max_length=255, default=NULL, blank=True, null=True)
+    analysis_summary = models.TextField(default=NULL, blank=True, null=True)
+    correction_summary = models.TextField(default=NULL, blank=True, null=True)
     issue = models.CharField(max_length=20, choices=CHOICES_YN, default=NULL, blank=True, null=True)
     # applicable
     PAR_SCR = models.CharField(max_length=255, default=NULL, blank=True, null=True)
-    comment = models.CharField(max_length=255, default=NULL, blank=True, null=True)
+    comment = models.TextField(default=NULL, blank=True, null=True)
