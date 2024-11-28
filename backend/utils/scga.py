@@ -1,4 +1,5 @@
 import xlwings as xw
+import openpyxl
 import pandas as pd
 import os
 import traceback
@@ -358,6 +359,139 @@ def read_exceptions(test_exeception_sheet, rows):
 
     return uncovered_modules
 
+def read_SCGA_openpyxl(scga_f, info=NULL):
+    """_summary_
+
+    Args:
+        app (xlwings app): xlwings app
+        scga_path (string): path of scga excel file
+
+    Raises:
+        ValueError: None
+
+    Returns:
+        dict: scga dataset
+        dict: scga funtions list of each level
+    """
+    # os.path.basename(scga_path)
+    READ_PLAN = False
+    READ_EXCEPTION = False
+    SCGA = {
+        'project': '',
+        'function': '',
+        'current': '',
+        'file_name': str(scga_f),
+        'baseline': str(scga_f).split('_SCGA')[0],
+        'levels': []
+    }
+
+    scga_function_list = {
+        'baseline': str(scga_f).split('_SCGA')[0],
+        'levelAFunctions': [],
+        'levelBFunctions': [],
+        'levelCFunctions': []
+    }
+    if info:
+        SCGA['project'] = info['project']
+        SCGA['function'] = info['function']
+        if info['current']: SCGA['current'] = 'Y'
+        else: SCGA['current'] = 'N'
+    scga_workbook = openpyxl.load_workbook(scga_f)
+    scga_sheets = scga_workbook.worksheets
+    for currentSheet in scga_sheets:
+        if 'Level' in currentSheet.title:
+            if not (READ_PLAN or READ_EXCEPTION):
+                Level = {
+                    'level': None,
+                    'test_plan': {},
+                    'test_exception': {},
+                }
+            # locate to file end
+            scga_log_f.seek(0, 2)
+            output_log(f'='*60)
+            output_log(f'extration of {currentSheet.title}')
+            Level['level'] = str(currentSheet.title).split(' ')[1]
+            if 'Plan' in currentSheet.title: # read test plan
+                test_plan = {
+                    'sheet_name': None,
+                    'modules': [],
+                    'lv_total_coverage': {}
+                }
+                # rows = len(pd.read_excel(scga_path, currentSheet.title))
+                rows = currentSheet.max_row
+                if rows - 7 != 0:
+                    test_plan['sheet_name'] = currentSheet.title
+                    # test_plan['level'] = str(currentSheet.title).split(' ')[1]
+                    test_plan['modules'], test_plan['lv_total_coverage'], function_list = read_plan(currentSheet, rows,  Level['level'])
+                    if len(test_plan['modules']) != 0:
+                        Level['test_plan'] = test_plan
+                        if Level['level'] == 'A':
+                            # SCGA['level_A']['test_plan'] = test_plan
+                            scga_function_list['levelAFunctions'] = function_list
+                        elif Level['level'] == 'B':
+                            # SCGA['level_B']['test_plan'] = test_plan
+                            scga_function_list['levelBFunctions'] = function_list
+                        elif Level['level'] == 'C':
+                            # SCGA['level_C']['test_plan'] = test_plan
+                            scga_function_list['levelCFunctions'] = function_list
+
+                else:
+                    scga_log_f.seek(0, 2)
+                    output_log(
+                        f'* SCGA Test Plan information not found in {currentSheet.title}')
+                READ_PLAN = True
+            elif 'Exceptions' in currentSheet.title: # read test exception
+                test_exception = {
+                    'sheet_name': None,
+                    # 'level': None,
+                    'modules': [],
+                }
+                rows = len(pd.read_excel(scga_path, currentSheet.title))
+                if rows - 5 != 0:
+                    test_exception['sheet_name'] = currentSheet.title
+                    # test_exception['level'] = str(currentSheet.title).split(' ')[1]
+                    test_exception['modules'] = read_exceptions(currentSheet, rows)
+                    if len(test_exception['modules']) != 0:
+                        Level['test_exception'] = test_exception
+
+                else:
+                    scga_log_f.seek(0, 2)
+                    output_log(
+                        f'* SCGA Test Execptions information not found in {currentSheet.title}')
+                READ_EXCEPTION = True
+            if READ_PLAN and READ_EXCEPTION and Level['test_plan']: # append only if test plan is not null
+                SCGA['levels'].append(Level)
+                READ_PLAN = False
+                READ_EXCEPTION = False
+    return SCGA, scga_function_list
+
+
+
+def parser_SCGA(app, scga_f, info=NULL):
+    all_scga_function_list = []
+    # scga_f = os.path.basename(scga_filepath)
+    # only handle 'SCGA' excel file, and ignore not 'xlsm' file and excel buffer file
+    if scga_f.endswith('xlsm') and '~' not in str(scga_f) and 'SCGA' in str(scga_f):
+        output_log(f'='*80)
+        output_log(f"extracting {scga_f}...")
+        # write down frist
+        scga_log_f.flush()
+        SCGA, scga_function_list = read_SCGA_openpyxl(
+            app, scga_filepath, info)
+        # SCGAs.append(SCGA)
+
+        all_scga_function_list.append(scga_function_list)
+        # point to file end
+        scga_log_f.seek(0, 2)
+        output_log(f'='*60)
+        output_log(f'extraction done !')
+        output_log(f'='*80)
+        output_log()
+    json.dump(SCGA, scga_json, indent=4, default=str)
+    pickle.dump(SCGA, scga_pickle, protocol=pickle.HIGHEST_PROTOCOL)
+    output_log(f'all extraction done !')
+
+
 
 def read_SCGA(app, scga_path, info=NULL):
     """_summary_
@@ -373,13 +507,14 @@ def read_SCGA(app, scga_path, info=NULL):
         dict: scga dataset
         dict: scga funtions list of each level
     """
+    # os.path.basename(scga_path)
     READ_PLAN = False
     READ_EXCEPTION = False
     SCGA = {
         'project': '',
         'function': '',
         'current': '',
-        'file_name': os.path.basename(scga_path),
+        'file_name': str(os.path.basename(scga_path)),
         'baseline': str(os.path.basename(scga_path)).split('_SCGA')[0],
         'levels': []
     }
@@ -465,6 +600,7 @@ def read_SCGA(app, scga_path, info=NULL):
     return SCGA, scga_function_list
 
 
+
 def parser_SCGAs(app, scga_rootpath, info=NULL):
     """Read all SCGA excel workbook from given root path
 
@@ -499,7 +635,6 @@ def parser_SCGAs(app, scga_rootpath, info=NULL):
                 SCGA, scga_function_list = read_SCGA(
                     app, os.path.join(root, scga_f), info)
                 SCGAs.append(SCGA)
-
                 all_scga_function_list.append(scga_function_list)
                 # point to file end
                 scga_log_f.seek(0, 2)
@@ -644,30 +779,41 @@ scga_log_f = None
 scga_json = None
 scga_pickle = None
 
-def post_SCGAs(rootPath, selection=2, info=NULL):
+
+def create_buffer(rootPath, selection, log_suffix=NULL):
     global scga_log_f, scga_json, scga_pickle
-    excelApp = xw.App(visible=False, add_book=False)
-    if os.path.isdir(rootPath):
-        # outputPath = os.path.join(rootPath, r'Output')
-        # outputPath.mkdir(parents=True, exist_ok=True)
-        scga_log_path = os.path.join(rootPath + r'/scga_log.txt')
+    # outputPath = os.path.join(rootPath, r'Output')
+    # outputPath.mkdir(parents=True, exist_ok=True)
+    if log_suffix:
+        scga_log_path = os.path.join(rootPath + rf'/scga_log_{log_suffix}.txt')
+        scgas_json_path = os.path.join(rootPath + rf'/scga_{log_suffix}.json')
+        scga_pickle_path = os.path.join(rootPath + rf'/scga_{log_suffix}.pkl')
+    else:
+        scga_log_path = os.path.join(rootPath + r'/scgas_log.txt')
         scgas_json_path = os.path.join(rootPath + r'/scgas.json')
         scga_pickle_path = os.path.join(rootPath + r'/scgas.pkl')
-        if int(selection) == 1: # new parser
-            scga_log_f = open(scga_log_path, 'w', encoding='UTF-8')
-            scga_json = open(scgas_json_path, 'w', encoding='UTF-8')
-            scga_pickle = open(scga_pickle_path, 'wb')
-        else: # append based on existence
-            scga_log_f = open(scga_log_path, 'a', encoding='UTF-8')
-            scgas_json_path = open(scgas_json_path, 'a', encoding='UTF-8')
-            scga_pickle = open(scga_pickle_path, 'ab')
+    if int(selection) == 1: # new parser
+        scga_log_f = open(scga_log_path, 'w', encoding='UTF-8')
+        scga_json = open(scgas_json_path, 'w', encoding='UTF-8')
+        scga_pickle = open(scga_pickle_path, 'wb')
+    else: # append based on existence
+        scga_log_f = open(scga_log_path, 'a', encoding='UTF-8')
+        scgas_json_path = open(scgas_json_path, 'a', encoding='UTF-8')
+        scga_pickle = open(scga_pickle_path, 'ab')
+
+
+def post_SCGAs(rootPath, selection=2, info=NULL, outputFunctionList = False):
+    excelApp = xw.App(visible=False, add_book=False)
+    if os.path.isdir(rootPath) or os.path.isfile(rootPath):
+        # outputPath = os.path.join(rootPath, r'Output')
+        # outputPath.mkdir(parents=True, exist_ok=True)
+        create_buffer(rootPath, selection)
         try:
             # read all SCGA excel from rootpath and output SCGAs dataset
-            SCGAs, scgas_functions_list = parser_SCGAs(
-                excelApp, rootPath, info)
+            SCGAs, scgas_functions_list = parser_SCGAs(excelApp, rootPath, info)
             # output function list of each SCGA as excel sheet
-            output_all_functions_as_sheet(
-                rootPath, scgas_functions_list)
+            if outputFunctionList:
+                output_all_functions_as_sheet(rootPath, scgas_functions_list)
             return {"result": "success", "detail": "parser completed", "data": SCGAs}
         except Exception as err:
             # print(repr(keyerr))
@@ -679,8 +825,22 @@ def post_SCGAs(rootPath, selection=2, info=NULL):
             scga_log_f.close()
             scga_json.close()
             scga_pickle.close()
+    # elif os.path.isfile(rootPath):
+    #     create_buffer(rootPath, selection, os.path.basename(rootPath))
+    #     try:
+    #         SCGA, scgas_functions_list = parser_SCGA(excelApp, rootPath, info)
+    #         return {"result": "success", "detail": "parser completed", "data": SCGA}
+    #     except Exception as err:
+    #         import pdb; pdb.set_trace()
+    #         print(traceback.print_exc())
+    #         return {"result": "error", "detail": traceback.print_exc()}
+    #     finally:
+    #         excelApp.quit()
+    #         scga_log_f.close()
+    #         scga_json.close()
+    #         scga_pickle.close()
     else:
-        return {"result": "error", "detail": 'the input path is not a valid path'}
+        return {"result": "error", "detail": 'the input root path is not a valid file or path'}
 
 
 

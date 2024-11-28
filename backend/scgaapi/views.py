@@ -300,7 +300,6 @@ class UploadSCGAsView(APIView):
             "current": data['current'],
         }
         if data['path']: # handle multiple scgas
-            
             response = scgaUtil.post_SCGAs(data['path'], 1, info)
             if response:
                 if response['result'] == 'success':
@@ -315,20 +314,20 @@ class UploadSCGAsView(APIView):
                     return Response(response['detail'], status=response['status'])
                 elif response['result'] == 'error':
                     return Response(response['detail'], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
-        elif data['file']:  # handle one 
+        elif data['file']:  # handle one file object 
             file_ = data['file']
             # file_ = request.FILES.get('file')
             # print("file: ", file_)
             if not file_ or not isinstance(file_, UploadedFile):
                 return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
             elif file_.name.endswith('.xlsm'):
-                pass
+                response = scgaUtil.post_SCGAs()
             elif file_.name.endswith('.pkl'):
                 scga_data = pickle.load(file_)
                 response = serializerScgaPkl(scga_data) # parser scga pkl file
                 return Response(response['detail'], status=response['status'])
                     
-            else:
-                return Response({"detail": "Invalid file format. Please upload a .pkl or .xlsm file."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"detail": "Invalid file format. Please upload a .pkl or .xlsm file."}, status=status.HTTP_400_BAD_REQUEST)
                 
 

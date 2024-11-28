@@ -107,6 +107,8 @@
 						:on-exceed="handleExceed"
 						:before-remove="beforeRemove"
 						:limit="1"
+						list-type="text"
+						accept=".pkl, .xlsm"
 						:auto-upload="false">
 						<template #trigger>
 							<el-button type="success">Select file</el-button>
@@ -117,13 +119,16 @@
 							</div>
 						</template>
 					</el-upload>
+					<!-- <p v-for="(item, index) in fileList" :key="index">
+						<span>{{ item.name }}</span>
+					</p> -->
 				</el-form-item>
 			</el-form>
 			<template #footer>
 				<div class="dialog-footer">
-					<el-button @click="handleCancel('Import')"
-						>Cancel</el-button
-					>
+					<el-button @click="handleCancel('Import')">
+						Cancel
+					</el-button>
 					<el-button
 						type="primary"
 						@click="handleSubmitImport(ruleFormRef)">
@@ -211,7 +216,7 @@
 
 <script setup>
 	import axios, { AxiosError } from "axios";
-	import { ref, inject, onMounted, watch, reactive } from "vue";
+	import { ref, inject, onMounted, watch, reactive, nextTick } from "vue";
 	import { ElMessage, ElMessageBox, genFileId } from "element-plus";
 	// v-model 和 ref 的核心区别
 	// v-model 是用于 双向绑定数据 的。它通常绑定组件的值或者用户输入的值。
@@ -222,7 +227,7 @@
 	const fileName = ref(null);
 	const baseline = inject("baseline");
 	const isImported = ref(false);
-
+	const fileList = ref([]);
 	const ruleFormRef = ref();
 	const rules = reactive({
 		project: [
@@ -279,7 +284,8 @@
 	const handleChange = (uploadFile, uploadFiles) => {
 		importFile = uploadFile.raw;
 		fileName.value = uploadFile.name;
-		console.log(fileName.value);
+		console.log("filename object", fileName);
+		console.log("filename", fileName.value);
 	};
 
 	const handleExceed = (files) => {
