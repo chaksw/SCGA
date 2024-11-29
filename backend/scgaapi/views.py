@@ -7,7 +7,8 @@ from django_filters import rest_framework as filters
 import pickle
 import json
 import os
-from utils import scga as scgaUtil
+from backend.utils import handle_scgas as scgaUtil
+from utils.scga import SCGA
 
 from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
 from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, TestExceptionSerializer, LvTotalCoverageSerializer, TPModuleSerializer, TEModuleSerializer, TPFunctionSerializer, TEFunctionSerializer, CoverageSerializer, CoveredSerializer, totalSerializer, DefectClassificationSerializer, UncoverageSerializer
@@ -321,7 +322,10 @@ class UploadSCGAsView(APIView):
             if not file_ or not isinstance(file_, UploadedFile):
                 return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
             elif file_.name.endswith('.xlsm'):
-                response = scgaUtil.post_SCGAs()
+                scga = SCGA(data['file'])
+                scga.read_scga()
+                response = serializerScgaPkl(scga.scga_dict)
+                # response = scgaUtil.post_SCGAs()
             elif file_.name.endswith('.pkl'):
                 scga_data = pickle.load(file_)
                 response = serializerScgaPkl(scga_data) # parser scga pkl file
