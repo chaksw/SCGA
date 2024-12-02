@@ -97,7 +97,7 @@
 					</el-select>
 				</el-form-item>
 				<el-form-item
-					prop="file"
+					type="file"
 					label=""
 					:label-width="0"
 					label-position="left">
@@ -107,8 +107,8 @@
 						:on-exceed="handleExceed"
 						:before-remove="beforeRemove"
 						:limit="1"
-						list-type="text"
 						accept=".pkl, .xlsm"
+						list-type="text"
 						:auto-upload="false">
 						<template #trigger>
 							<el-button type="success">Select file</el-button>
@@ -119,23 +119,20 @@
 							</div>
 						</template>
 					</el-upload>
+					<span id="errorFileTypeMsg" style="color: red"></span>
 					<!-- <p v-for="(item, index) in fileList" :key="index">
 						<span>{{ item.name }}</span>
 					</p> -->
 				</el-form-item>
 			</el-form>
-			<template #footer>
-				<div class="dialog-footer">
-					<el-button @click="handleCancel('Import')">
-						Cancel
-					</el-button>
-					<el-button
-						type="primary"
-						@click="handleSubmitImport(ruleFormRef)">
-						Confirm
-					</el-button>
-				</div>
-			</template>
+			<el-form-item class="form-footer">
+				<el-button @click="handleCancel('Import')"> Cancel </el-button>
+				<el-button
+					type="primary"
+					@click="handleSubmitImport(ruleFormRef)">
+					Confirm
+				</el-button>
+			</el-form-item>
 		</el-dialog>
 
 		<!-- pas scga configuration drawer -->
@@ -189,7 +186,7 @@
 						v-model="pasScgasForm.path"
 						autocomplete="off" />
 				</el-form-item>
-				<el-form-item style="flex: auto">
+				<el-form-item class="form-footer">
 					<el-button @click="handleCancel('Configuration')">
 						Cancel
 					</el-button>
@@ -251,13 +248,14 @@
 				trigger: "blur",
 			},
 		],
-		file: [
-			{
-				required: true,
-				message: "Please choose the scga file",
-				trigger: "blur",
-			},
-		],
+		// file: [
+		// 	{
+		// 		required: true,
+		// 		message:
+		// 			"Wrong file type, Please choose the scga file(*.pkl | *.xlsm)",
+		// 		trigger: "blur",
+		// 	},
+		// ],
 	});
 	const configFormLabelWidth = "120px";
 	const importFormLabelWidth = "120px";
@@ -284,8 +282,8 @@
 	const handleChange = (uploadFile, uploadFiles) => {
 		importFile = uploadFile.raw;
 		fileName.value = uploadFile.name;
-		console.log("filename object", fileName);
-		console.log("filename", fileName.value);
+		// console.log("filename object", fileName);
+		// console.log("filename", fileName.value);
 	};
 
 	const handleExceed = (files) => {
@@ -293,43 +291,6 @@
 		const file = files[0];
 		file.uid = genFileId();
 		upload.value.handleStart(file);
-	};
-
-	const submitImport = async () => {
-		await ElMessageBox.confirm(`Confirm the import of ${fileName.value} ?`);
-
-		// create form
-		const formData = new FormData();
-		console.log(importFile);
-		formData.append("file", importFile); // `raw` 是 ElUpload 文件对象的实际文件数据
-
-		// send to backend
-		await axios
-			.post("api/upload-scgas/", formData, {
-				headers: {
-					"Content-Type": "multipart/form-data", // must have
-				},
-			})
-			.then((response) => {
-				// console.log(upload.value);
-				ElMessage.success(
-					`File ${fileName.value} import successfully!`
-				);
-				// get response
-				console.log("Response from server: ", response.data);
-				location.reload();
-				// upload.clearFiles(); //clear upload component
-				// reset status
-			})
-			.catch((error) => {
-				// handle cancel or fail of import
-				if (axios.isCancel(error) || error === "cancel") {
-					ElMessage.info("File upload canceled");
-				} else {
-					console.error("Upload error: ", error.data.detail);
-					ElMessage.error("Fail to upload file.", error.data.detail);
-				}
-			});
 	};
 
 	const beforeRemove = (uploadFile, uploadFiles) => {
@@ -399,10 +360,70 @@
 		});
 	};
 
-	const handleSubmitImport = async (formEl) => {
+	const submitImport = async () => {
+		await ElMessageBox.confirm(`Confirm the import of ${fileName.value} ?`);
+		console.log(scgaForm);
+		// create form
+		// const formData = new FormData();
+		console.log("import raw", importFile);
+		// formData.append("file", importFile); // `raw` 是 ElUpload 文件对象的实际文件数据
+		scgaForm.file = importFile;
+		console.log("inscga", scgaForm.file);
+		// send to backend
+		await axios
+			.post("api/upload-scgas/", scgaForm, {
+				// headers: {
+				// 	"Content-Type": "multipart/form-data", // must have
+				// },
+				headers: {
+					"Content-Type": "application/json",
+					// Authorization: "Bearer your_token_here", // 如果需要身份验证的话
+				},
+			})
+			.then((response) => {
+				// console.log(upload.value);
+				ElMessage.success(
+					`File ${fileName.value} import successfully!`
+				);
+				// get response
+				console.log("Response from server: ", response.data);
+				location.reload();
+				// upload.clearFiles(); //clear upload component
+				// reset status
+			})
+			.catch((error) => {
+				// handle cancel or fail of import
+				if (axios.isCancel(error) || error === "cancel") {
+					ElMessage.info("File upload canceled");
+				} else {
+					console.error("Upload error: ", error.data.detail);
+					ElMessage.error("Fail to upload file.", error.data.detail);
+				}
+			});
+	};
+
+	const handleSubmitImport = async function (formEl) {
 		if (!formEl) return;
+		// file extension validation
+		let filePath = fileName.value;
+		let extension = filePath
+			.substring(filePath.lastIndexOf("."), filePath.length)
+			.toLowerCase();
+		let validFileTypes = [".pkl", ".xlsm"];
+		let isVaildFile = validFileTypes.includes(extension);
+		let errorMsgTag = document.getElementById("errorFileTypeMsg");
+		errorMsgTag.innerHTML = "";
+		if (!isVaildFile) {
+			errorMsgTag.innerHTML =
+				"Invalid File. Please upload file with extension: " +
+				validFileTypes.join(", ") +
+				".";
+			return false;
+		}
+		// validation for other selections input
 		await formEl.validate((valid, fields) => {
 			if (valid) {
+				// alert("submit");
 				submitImport();
 			} else {
 				console.log("error submit", fields);

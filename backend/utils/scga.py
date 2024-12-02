@@ -1,6 +1,7 @@
 # ****************************************************
 # run pip install -r requirements.txt for dependencies 
 # ****************************************************
+
 import openpyxl
 import traceback
 import datetime
@@ -45,11 +46,11 @@ class SCGA:
         if not(scga_f.endswith('xlsm') and '~' not in str(scga_f) and 'SCGA' in str(scga_f)):
             print("Inpropre input file type: must be a .xlsm file with 'SCGA' included in filename")
             raise ValueError
-        self.scga_wb = openpyxl.load_workbook(scga_f, read_only=True)
+        self.scga_wb = openpyxl.load_workbook(scga_f, read_only=True, data_only=True)
         self.scga_dict = {
-            'project': '',
-            'function': '',
-            'current': '',
+            'project': '', # project name
+            'function': '', # function name (GGF, WMF, CALF)
+            'current': '', # if it current baseline (load)
             'file_name': str(scga_f).split("\\")[-1],
             'baseline': str(scga_f).split("\\")[-1].split('_SCGA')[0],
             'levels': []
@@ -200,9 +201,9 @@ class SCGA:
             for tp_row_data in tpsheet.iter_rows(min_row=tp_start_row, max_col=tp_max_col, values_only=True):
                 if tp_row_data[1] is None:
                     if 'level' in str(tp_row_data[0]).lower():
-                        level_total_coverage['percent_coverage_MCDC'] = tp_row_data[7]
-                        level_total_coverage['percent_coverage_Analysis'] = tp_row_data[8]
-                        level_total_coverage['total_coverage'] = tp_row_data[9]
+                        level_total_coverage['percent_coverage_MCDC'] = '%.4f'%(float(tp_row_data[7]))
+                        level_total_coverage['percent_coverage_Analysis'] = '%.4f'%(float(tp_row_data[8]))
+                        level_total_coverage['total_coverage'] = '%.4f'%(float(tp_row_data[9]))
                         continue
                     else:
                         continue
@@ -243,7 +244,6 @@ class SCGA:
                     module['module_name'] = tp_row_data[1]
                 
                 # defect _classification
-
                 defect_classification['tech'] = tp_row_data[-3]
                 defect_classification['non_tech'] = tp_row_data[-2]
                 defect_classification['process'] = tp_row_data[-1]
@@ -252,9 +252,9 @@ class SCGA:
                 function['covered'], function['total'] = self.read_info_behind_coverages(tp_row_data, level)
                 
                 # coverage
-                coverage['percent_coverage_MCDC'] = tp_row_data[7]
-                coverage['percent_coverage_Analysis'] = tp_row_data[8]
-                coverage['total_coverage'] = tp_row_data[9]
+                coverage['percent_coverage_MCDC'] = '%.4f'%(float(tp_row_data[7]))
+                coverage['percent_coverage_Analysis'] = '%.4f'%(float(tp_row_data[8]))
+                coverage['total_coverage'] = '%.4f'%(float(tp_row_data[9]))
                 # function
                 function['function_name'] = tp_row_data[2]
                 function['analyst'] = tp_row_data[4]
@@ -417,7 +417,7 @@ class SCGA:
         return uncovered_modules
 
 
-def test():
+def main():
     scga_f = input("Please enter the file path: ")
     # scga = SCGA(scga_f)
     scga = SCGA(scga_f)
@@ -427,4 +427,4 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
+    main()

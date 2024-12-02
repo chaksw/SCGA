@@ -6,9 +6,7 @@ from rest_framework.exceptions import ValidationError
 from django_filters import rest_framework as filters
 import pickle
 import json
-import os
-from backend.utils import handle_scgas as scgaUtil
-from utils.scga import SCGA
+import utils
 
 from .models import Scga, Level, TestPlan, TestException, LvTotalCoverage, SCGAModule, SCGAFunction, Coverage, Covered, total, DefectClassification, Uncoverage
 from .serializers import ScgaSerializer, LevelSerializer, TestPlanSerializer, TestExceptionSerializer, LvTotalCoverageSerializer, TPModuleSerializer, TEModuleSerializer, TPFunctionSerializer, TEFunctionSerializer, CoverageSerializer, CoveredSerializer, totalSerializer, DefectClassificationSerializer, UncoverageSerializer
@@ -300,8 +298,9 @@ class UploadSCGAsView(APIView):
             "function": data['function'],
             "current": data['current'],
         }
-        if data['path']: # handle multiple scgas
-            response = scgaUtil.post_SCGAs(data['path'], 1, info)
+        if 'path' in data and data['path']: # handle multiple scgas
+            SCGAs_process = utils.SCGAs(data['path'], 1, info)
+            SCGAs_process.post_SCGAs(data['path'], 1, info)
             if response:
                 if response['result'] == 'success':
                     # print(response['data'])
@@ -311,18 +310,20 @@ class UploadSCGAsView(APIView):
                     #         scga_pkl_file = os.path.join(data['path'], filename)
                     #         with open(scga_pkl_file, 'rb') as f:
                     #           response = serializerScgaPkl(f)
-                    response = serializerScgaPkl(response['data'])
+                    response = serializerScgaPkl(SCGAs_process.SCGAs)
                     return Response(response['detail'], status=response['status'])
                 elif response['result'] == 'error':
                     return Response(response['detail'], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
-        elif data['file']:  # handle one file object 
+        elif 'file' in data and data['file']:  # handle one file object 
             file_ = data['file']
+            print(file_)
             # file_ = request.FILES.get('file')
             # print("file: ", file_)
             if not file_ or not isinstance(file_, UploadedFile):
                 return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
             elif file_.name.endswith('.xlsm'):
-                scga = SCGA(data['file'])
+                import pdb;pdb.set_trace()
+                scga = utils.SCGA(data['file'], info)
                 scga.read_scga()
                 response = serializerScgaPkl(scga.scga_dict)
                 # response = scgaUtil.post_SCGAs()
