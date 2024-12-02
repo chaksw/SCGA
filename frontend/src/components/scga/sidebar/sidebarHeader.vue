@@ -365,20 +365,19 @@
 		console.log(scgaForm);
 		// create form
 		// const formData = new FormData();
-		console.log("import raw", importFile);
 		// formData.append("file", importFile); // `raw` 是 ElUpload 文件对象的实际文件数据
 		scgaForm.file = importFile;
 		console.log("inscga", scgaForm.file);
 		// send to backend
 		await axios
 			.post("api/upload-scgas/", scgaForm, {
-				// headers: {
-				// 	"Content-Type": "multipart/form-data", // must have
-				// },
 				headers: {
-					"Content-Type": "application/json",
-					// Authorization: "Bearer your_token_here", // 如果需要身份验证的话
+					"Content-Type": "multipart/form-data", // must have
 				},
+				// headers: {
+				// 	"Content-Type": "application/json;charset=utf-8",
+				// 	// Authorization: "Bearer your_token_here", // 如果需要身份验证的话
+				// },
 			})
 			.then((response) => {
 				// console.log(upload.value);

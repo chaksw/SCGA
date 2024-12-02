@@ -292,38 +292,46 @@ def serializerScgaPkl(scga_data):
 
 class UploadSCGAsView(APIView):
     def post(self, request, *args, **kwargs):
-        data = json.loads(request.body)
+        # print(request.body)
+        # data = json.loads(request.body)
+        data = request.data
+        # info = {
+        #     "project": data['project'],
+        #     "function": data['function'],
+        #     "current": data['current'],
+        # }
         info = {
             "project": data['project'],
             "function": data['function'],
             "current": data['current'],
         }
+        # print(data)
         if 'path' in data and data['path']: # handle multiple scgas
-            SCGAs_process = utils.SCGAs(data['path'], 1, info)
-            SCGAs_process.post_SCGAs(data['path'], 1, info)
-            if response:
-                if response['result'] == 'success':
-                    # print(response['data'])
-                    # import pdb; pdb.set_trace()
-                    # for filename in os.listdir(data['path']):
-                    #     if filename.endswith('.pkl'):
-                    #         scga_pkl_file = os.path.join(data['path'], filename)
-                    #         with open(scga_pkl_file, 'rb') as f:
-                    #           response = serializerScgaPkl(f)
-                    response = serializerScgaPkl(SCGAs_process.SCGAs)
-                    return Response(response['detail'], status=response['status'])
-                elif response['result'] == 'error':
-                    return Response(response['detail'], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
+                SCGAs_process = utils.SCGAs(data['path'], 1, info)
+                SCGAs_process.post_SCGAs(data['path'], 1, info)
+                if response:
+                    if response['result'] == 'success':
+                        # print(response['data'])
+                        # import pdb; pdb.set_trace()
+                        # for filename in os.listdir(data['path']):
+                        #     if filename.endswith('.pkl'):
+                        #         scga_pkl_file = os.path.join(data['path'], filename)
+                        #         with open(scga_pkl_file, 'rb') as f:
+                        #           response = serializerScgaPkl(f)
+                        response = serializerScgaPkl(SCGAs_process.SCGAs)
+                        return Response(response['detail'], status=response['status'])
+                    elif response['result'] == 'error':
+                        return Response(response['detail'], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
         elif 'file' in data and data['file']:  # handle one file object 
-            file_ = data['file']
-            print(file_)
+            file_ =  data['file']
+            # print(file_)
             # file_ = request.FILES.get('file')
             # print("file: ", file_)
             if not file_ or not isinstance(file_, UploadedFile):
                 return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
             elif file_.name.endswith('.xlsm'):
                 import pdb;pdb.set_trace()
-                scga = utils.SCGA(data['file'], info)
+                scga = utils.SCGA(file_, info)
                 scga.read_scga()
                 response = serializerScgaPkl(scga.scga_dict)
                 # response = scgaUtil.post_SCGAs()
