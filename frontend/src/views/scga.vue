@@ -6,8 +6,7 @@
 		<div>
 			<el-divider
 				direction="vertical"
-				style="min-height: 100vh; height: 100%"
-			></el-divider>
+				style="min-height: 100vh; height: 100%"></el-divider>
 		</div>
 		<!-- main -->
 		<el-main>
@@ -17,19 +16,16 @@
 					type="card"
 					class="demo-tabs"
 					closable
-					@tab-remove="removeTab"
-				>
+					@tab-remove="removeTab">
 					<el-tab-pane
 						v-for="item in moduleTabs"
 						:key="item.name"
 						:label="item.title"
-						:name="item.name"
-					>
+						:name="item.name">
 						<testPlan
-							:selectedModule="item.content"
 							v-if="isTestPlan"
-						/>
-						<testException :selectedModule="item.content" v-else />
+							:selectedModule="item.content" />
+						<testException v-else :selectedModule="item.content" />
 					</el-tab-pane>
 				</el-tabs>
 			</div>
@@ -42,12 +38,13 @@
 	import testException from "@/components/scga/testException.vue";
 	import sidebar from "@/components/scga/sidebar/sidebar.vue";
 	import axios from "axios";
-	import { ref, provide, onMounted } from "vue";
+	import { ref, provide, onMounted, reactive } from "vue";
 
 	// scga list
 	const data = ref([]);
 	const baseline = ref("SCGA Workspace");
 	const levels = ref(null);
+	const curSCGAId = ref(0)
 	const selectedModule = ref();
 	const testPlanModule = ref();
 	const testExceptionModule = ref();
@@ -117,7 +114,6 @@
 			// check if selected module from test plan or test exception
 			if (module.value.root.name.includes("Test Plan")) {
 				testPlanModule.value = module.value;
-				// console.log("on scga", testPlanModule.value);
 				isTestPlan.value = true;
 				addTab(testPlanModule);
 			} else {
@@ -139,11 +135,12 @@
 			.get(url)
 			.then((response) => {
 				if (response.data) {
-					data.value = locateCurrent(response.data.results)
-					// console.log(data.value);
-					baseline.value = data.value.baseline;
-					levels.value = data.value.levels;
-					levels.value.baseline = baseline.value;
+					data.value = locateCurrent(response.data.results);
+					if (data.value){
+						baseline.value = data.value.baseline;
+						levels.value = data.value.levels;
+						curSCGAId.value = data.value.id
+					}
 				}
 			})
 			.catch((error) => {
@@ -152,15 +149,17 @@
 	};
 
 	const locateCurrent = (scgasData) => {
-		for (const scga of scgasData){
-			if (scga.current === 'Y'){
-				return scga
+		for (const scga of scgasData) {
+			if (scga.current === "Y") {
+				return scga;
 			}
 		}
-	}
+		return false
+	};
 
 	provide("baseline", baseline);
 	provide("levels", levels);
+	provide('curSCGAId', curSCGAId)
 	// provide("testPlanModule", testPlanModule);
 	// provide("testExceptionModule", testExceptionModule);
 	// provide("selectedModule", selectedModule);

@@ -36,6 +36,7 @@
 									><Setting /></el-icon
 							></el-dropdown-item>
 							<el-dropdown-item
+								@click="deletaCurrentSCGA"
 								style="
 									width: 150px;
 									color: red;
@@ -223,6 +224,7 @@
 	let importFile = null; // 存储选中的文件
 	const fileName = ref(null);
 	const baseline = inject("baseline");
+	const id = inject("curSCGAId");
 	const isImported = ref(false);
 	const fileList = ref([]);
 	const ruleFormRef = ref();
@@ -428,6 +430,22 @@
 				console.log("error submit", fields);
 			}
 		});
+	};
+
+	const deletaCurrentSCGA = async () => {
+		await ElMessageBox.confirm(`Are you sure to delete ${baseline.value} ?`);
+		let url = `api/scgas/${id.value}/`;
+		console.log(url);
+		await axios
+			.delete(url)
+			.then((response) => {
+				console.log(response.data);
+				console.log(`Deleted scga ${baseline.value} with ID ${id.value}`);
+				location.reload();
+			})
+			.catch((error) => {
+				console.log("error", error);
+			});
 	};
 
 	onMounted(() => {

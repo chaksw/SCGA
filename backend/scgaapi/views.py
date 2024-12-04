@@ -279,7 +279,6 @@ def serializerScgaPkl(scga_data):
                 else:
                     return {'detail': serializer.errors, 'status': status.HTTP_400_BAD_REQUEST}
         elif isinstance(scga_data, dict):
-            import pdb;pdb.set_trace()
             serializer = ScgaSerializer(data=scga_data)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
@@ -291,14 +290,7 @@ def serializerScgaPkl(scga_data):
 
 class UploadSCGAsView(APIView):
     def post(self, request, *args, **kwargs):
-        # print(request.body)
-        # data = json.loads(request.body)
         data = request.data
-        # info = {
-        #     "project": data['project'],
-        #     "function": data['function'],
-        #     "current": data['current'],
-        # }
         info = {
             "project": data['project'],
             "function": data['function'],
@@ -310,13 +302,6 @@ class UploadSCGAsView(APIView):
                 SCGAs_process.post_SCGAs(data['path'], 1, info)
                 if response:
                     if response['result'] == 'success':
-                        # print(response['data'])
-                        # import pdb; pdb.set_trace()
-                        # for filename in os.listdir(data['path']):
-                        #     if filename.endswith('.pkl'):
-                        #         scga_pkl_file = os.path.join(data['path'], filename)
-                        #         with open(scga_pkl_file, 'rb') as f:
-                        #           response = serializerScgaPkl(f)
                         response = serializerScgaPkl(SCGAs_process.SCGAs)
                         return Response(response['detail'], status=response['status'])
                     elif response['result'] == 'error':
