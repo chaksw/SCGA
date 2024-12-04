@@ -266,8 +266,6 @@ class UncoverageViewSet(viewsets.ModelViewSet):
     
 def serializerScgaPkl(scga_data):
     try:
-        # load data from .pkl file
-        
         if isinstance(scga_data, list):
             if not all(isinstance(item, dict) for item in scga_data):
                 return {"detail": "Invalid data format. Excepted a list of scga dictrionaries.", 'status': status.HTTP_400_BAD_REQUEST}
@@ -280,13 +278,14 @@ def serializerScgaPkl(scga_data):
                     serializer.save()
                 else:
                     return {'detail': serializer.errors, 'status': status.HTTP_400_BAD_REQUEST}
-            return {'detail': "SCGAs uploaded successfully", 'status': status.HTTP_201_CREATED}
         elif isinstance(scga_data, dict):
-            serializer = ScgaSerializer(data=item)
-            if serializer.is_valid():
+            import pdb;pdb.set_trace()
+            serializer = ScgaSerializer(data=scga_data)
+            if serializer.is_valid(raise_exception=True):
                 serializer.save()
             else:
                 return {'detail': serializer.errors, 'status': status.HTTP_400_BAD_REQUEST}
+        return {'detail': "SCGAs uploaded successfully", 'status': status.HTTP_201_CREATED}
     except Exception as e:
         return {'detail': str(e), 'status': status.HTTP_500_INTERNAL_SERVER_ERROR}
 
@@ -324,13 +323,13 @@ class UploadSCGAsView(APIView):
                         return Response(response['detail'], status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
         elif 'file' in data and data['file']:  # handle one file object 
             file_ =  data['file']
+            response = None
             # print(file_)
             # file_ = request.FILES.get('file')
             # print("file: ", file_)
             if not file_ or not isinstance(file_, UploadedFile):
                 return Response({"detail": "No file uploaded or wrong file type."}, status=status.HTTP_400_BAD_REQUEST)
             elif file_.name.endswith('.xlsm'):
-                import pdb;pdb.set_trace()
                 scga = utils.SCGA(file_, info)
                 scga.read_scga()
                 response = serializerScgaPkl(scga.scga_dict)
@@ -338,8 +337,7 @@ class UploadSCGAsView(APIView):
             elif file_.name.endswith('.pkl'):
                 scga_data = pickle.load(file_)
                 response = serializerScgaPkl(scga_data) # parser scga pkl file
-                return Response(response['detail'], status=response['status'])
-                    
+            return Response(response['detail'], status=response['status'])
         else:
             return Response({"detail": "Invalid file format. Please upload a .pkl or .xlsm file."}, status=status.HTTP_400_BAD_REQUEST)
                 

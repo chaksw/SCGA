@@ -5,6 +5,7 @@
 import openpyxl
 import traceback
 import datetime
+from django.core.files.uploadedfile import UploadedFile
 
 NULL = ''
 # scga class
@@ -43,7 +44,10 @@ class SCGA:
     LEVEL = 'Level'
 
     def __init__(self, scga_f, info = None):
-        if not(scga_f.endswith('xlsm') and '~' not in str(scga_f) and 'SCGA' in str(scga_f)):
+        fn = scga_f
+        if isinstance(scga_f, UploadedFile):
+            fn = scga_f.name
+        if not(fn.endswith('xlsm') and '~' not in str(fn) and 'SCGA' in str(fn)):
             print("Inpropre input file type: must be a .xlsm file with 'SCGA' included in filename")
             raise ValueError
         self.scga_wb = openpyxl.load_workbook(scga_f, read_only=True, data_only=True)
