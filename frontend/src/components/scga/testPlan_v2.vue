@@ -66,7 +66,7 @@
 
 					return rowData;
 				},
-				// 数组本身的元素 即 array
+				// 数组本身的元素 即 initialValue
 				{
 					id: `${prefix}${rowIndex}`,
 					parentId: null,
