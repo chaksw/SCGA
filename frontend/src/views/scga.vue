@@ -48,7 +48,7 @@
 	const data = ref([]);
 	const baseline = ref("SCGA Workspace");
 	const levels = ref(null);
-	const curSCGAId = ref(0)
+	const curSCGAId = ref(0);
 	const selectedModule = ref();
 	const testPlanModule = ref();
 	const testExceptionModule = ref();
@@ -140,10 +140,10 @@
 			.then((response) => {
 				if (response.data) {
 					data.value = locateCurrent(response.data.results);
-					if (data.value){
+					if (data.value) {
 						baseline.value = data.value.baseline;
 						levels.value = data.value.levels;
-						curSCGAId.value = data.value.id
+						curSCGAId.value = data.value.id;
 					}
 				}
 			})
@@ -158,12 +158,12 @@
 				return scga;
 			}
 		}
-		return false
+		return false;
 	};
 
 	provide("baseline", baseline);
 	provide("levels", levels);
-	provide('curSCGAId', curSCGAId)
+	provide("curSCGAId", curSCGAId);
 	// provide("testPlanModule", testPlanModule);
 	// provide("testExceptionModule", testExceptionModule);
 	// provide("selectedModule", selectedModule);

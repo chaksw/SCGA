@@ -1,5 +1,5 @@
 <template>
-	<div style="height: 100vh">
+	<div style="height: 800px">
 		<el-auto-resizer>
 			<template #default="{ height, width }">
 				<el-table-v2
@@ -24,21 +24,41 @@
 	});
 	const functions = ref();
 	const selectedModule = toRef(props, "selectedModule");
-    
+
 	functions.value = selectedModule.value.functions;
-    console.log("testplan functions", selectedModule.value.functions);
+	console.log("testplan functions", selectedModule.value.functions);
 	const generateColumns = (length = 10, prefix = "col-", props) =>
+		// Array.from 主要用于从类数组对象或可迭代对象创建一个新的数组
+		// 如 Array.form({ 10 }) = [1,2,3,4,5,6,7,8,9]
+		// Array.from(arrayLike, mapFn, thisArg)
+		// arrayLike: 类数组对象或可迭代对象
+		// mapFn （可选）： 一个函数，用来对每个元素执行某种操作，相当于数组的.map()
+		// thisArg(可选)： 执行mapFn时的上下文
+		// 用花括号包围 { 10 } 是因为Array.form需要接受一个类数组对象
+		// map 是数组的实例方法，用于对数组的每个元素执行指定操作，并返回一个新的数组。
+		// array.map(callback(currentValue, index, array), thisArg)
+		// callback: 处理数组中每个元素的函数
+		// thisArg(可选)：执行 callback 时绑定的上下文
 		Array.from({ length }).map((_, columnIndex) => ({
-			...props,
+			...props, // 将 props 解构到列的配置对象中
 			key: `${prefix}${columnIndex}`,
 			dataKey: `${prefix}${columnIndex}`,
 			title: `col ${columnIndex}`,
-			width: 150,
+			width: 180,
 		}));
 
 	const generateData = (columns, length = 200, prefix = "row-") =>
+		// 为每一行建立数据
 		Array.from({ length }).map((_, rowIndex) => {
+			// reduce 语法
+			// array.reduce(callback, initialValue)
+			// callback(accumularotr, currentValue, currentIndex, array)
+			// accumulator: 累积值，表示上一次回调函数的返回值
+			// currentValue： 当前正在处理的数组元素
+			// currentIndex: 当前元素的索引 （可选）
+			// array: 调用 reduce的数组本身
 			return columns.reduce(
+				// 为每一行的列元素建立（累积）数据
 				(rowData, column, columnIndex) => {
 					rowData[
 						column.dataKey
@@ -46,6 +66,7 @@
 
 					return rowData;
 				},
+				// 数组本身的元素 即 array
 				{
 					id: `${prefix}${rowIndex}`,
 					parentId: null,
