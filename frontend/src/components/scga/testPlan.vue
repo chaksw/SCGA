@@ -1,8 +1,10 @@
 <template>
 	<el-table
 		:data="functions"
-		style="width: 100%"
+		style="table-layout: auto !important; width: 100%;"
 		max-height="800"
+		border
+		show-summary
 		table-layout="auto">
 		<el-table-column prop="process" label="Process" fixed />
 		<el-table-column fixed prop="function_name" label="Function Name" />
@@ -45,12 +47,8 @@
 				<el-table-column prop="covered.statement" label="Statements" />
 			</el-table-column>
 			<el-table-column prop="total" label="Total">
-				<el-table-column
-					prop="total.branches"
-					label="Branches" />
-				<el-table-column
-					prop="total.pairs"
-					label="Pairs" />
+				<el-table-column prop="total.branches" label="Branches" />
+				<el-table-column prop="total.pairs" label="Pairs" />
 				<el-table-column prop="total.statement" label="Statements" />
 			</el-table-column>
 		</el-table-column>
@@ -82,7 +80,7 @@
 	functions.value = selectedModule.value.functions;
 	console.log("testplan", selectedModule.value);
 	console.log("testplan functions", selectedModule.value.functions);
-
+	
 	// const functions = ref();
 	// onMounted(() => {
 	// 	if (props.selectedModuleValue) {

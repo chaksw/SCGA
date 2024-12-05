@@ -22,7 +22,10 @@
 						:key="item.name"
 						:label="item.title"
 						:name="item.name">
-						<testPlan
+						<!-- <testPlan
+							v-if="isTestPlan"
+							:selectedModule="item.content" /> -->
+						<testPlan_v2
 							v-if="isTestPlan"
 							:selectedModule="item.content" />
 						<testException v-else :selectedModule="item.content" />
@@ -36,6 +39,7 @@
 <script setup>
 	import testPlan from "@/components/scga/testPlan.vue";
 	import testException from "@/components/scga/testException.vue";
+	import testPlan_v2 from "@/components/scga/testPlan_v2.vue";
 	import sidebar from "@/components/scga/sidebar/sidebar.vue";
 	import axios from "axios";
 	import { ref, provide, onMounted, reactive } from "vue";
