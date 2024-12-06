@@ -389,6 +389,7 @@
 				// get response
 				console.log("Response from server: ", response.data);
 				location.reload();
+				// nextTick()
 				// upload.clearFiles(); //clear upload component
 				// reset status
 			})
@@ -442,6 +443,7 @@
 				console.log(response.data);
 				console.log(`Deleted scga ${baseline.value} with ID ${id.value}`);
 				location.reload();
+				// nextTick()
 			})
 			.catch((error) => {
 				console.log("error", error);

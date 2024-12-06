@@ -62,9 +62,6 @@
 
 	const moduleAdded = (moduleValue) => {
 		const tabs = moduleTabs.value;
-		// console.log("tabs", tabs);
-		// console.log("tabs length", tabs.length);
-		// console.log(tabs);
 		// see if the selected module already opened
 		if (tabs) {
 			for (const tab of tabs) {
@@ -88,7 +85,6 @@
 			root: module.value.root,
 		});
 		console.log(moduleTabs.value[moduleTabs.value.length - 1].content);
-		// console.log(typeof(moduleTabs.value[0].content));
 		moduleTabsValue.value = newTabName;
 	};
 
@@ -114,7 +110,6 @@
 		// for the first tab, selectedModule should be undefined
 		if (!moduleAdded(module.value)) {
 			// selectedModule.value = module.value;
-			// console.log("on scga", selectedModule.value);
 			// check if selected module from test plan or test exception
 			if (module.value.root.name.includes("Test Plan")) {
 				testPlanModule.value = module.value;
