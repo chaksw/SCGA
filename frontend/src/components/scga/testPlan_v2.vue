@@ -3,11 +3,16 @@
 		<el-auto-resizer>
 			<template #default="{ height, width }">
 				<el-table-v2
-					:columns="columns"
+					fixed
+					:columns="fixedColumns"
 					:data="data"
+					:header-height="[50, 40, 50]"
+					:header-class="headerClass"
 					:width="width"
-					:height="height"
-					fixed>
+					:height="height">
+					<template #header="props">
+						<customized-header v-bind="props" />
+					</template>
 				</el-table-v2>
 			</template>
 		</el-auto-resizer>
@@ -19,10 +24,10 @@
 
 	const keyMap = {
 		id: "ID",
-		module: 'File Name',
-		functions_name: 'Function',
+		module: "File Name",
+		function_name: "Function",
 		function: "Function",
-		analyst: 'Analyst',
+		analyst: "Analyst",
 		site: "Site",
 		start_date: "Start Date",
 		coverage: "Coverage",
@@ -33,24 +38,23 @@
 		branches: "Branches",
 		pairs: "Pairs",
 		statement: "Statements",
-		total: 'Total',
+		total: "Total",
 		defect_classification: "Defect Classification",
 		non_tech: "Non-Tech",
 		process: "Process",
 		tech: "Tech",
 		oversight: "Oversight",
+	};
 
-	}
-
-	const props = defineProps({
+	const propsModule = defineProps({
 		selectedModule: {
 			type: Object,
 		},
 	});
 
 	// 双向绑定： 将props中的selectdModule 和 该组件的selectedModule 双向绑定，让数据改变同步
-	const selectedModule = toRef(props, "selectedModule");
-	const functions = ref(selectedModule.value.functions);
+	const selectedModule = toRef(propsModule, "selectedModule");
+	const functions = selectedModule.value.functions;
 	// let headers = []
 	const columns = ref([]);
 	const data = ref([]);
@@ -109,11 +113,19 @@
 			for (let key in o) {
 				// deconstruct automatically the object{}
 				if (o.hasOwnProperty(key)) {
+					if (key === "id" || key === "function" || key === "module")
+						continue;
 					keys.push(key);
 					if (typeof o[key] === "object" && o[key] !== null) {
 						recurseKeys(o[key]);
 					} else {
-						values.push(o[key]);
+						if (key.includes("coverage")) {
+							values.push(parseFloat(o[key]).toFixed(2));
+							// console.log(parseFloat(o[key]).toFixed(2));
+							// console.log(typeof o[key]);
+						} else {
+							values.push(o[key]);
+						}
 					}
 				}
 			}
@@ -138,8 +150,71 @@
 		}
 		return [keys, valuesList];
 	};
+
+	// 固定前3列在左，14列及以上的在右，宽度为100
+	const fixedColumns = columns.value.map((column, columnIndex) => {
+		let fixed = undefined;
+		if (columnIndex < 2) fixed = TableV2FixedDir.LEFT;
+		return { ...column, fixed, width: 100 };
+	});
+
+	// 自定义表头组件
+	const CustomizedHeader = {
+		functional: true, // defined as a functional component of which render only depends on the props injected.
+
+		props: ["cells", "columns", "headerIndex"], // attributes that component received
+		// cells: array of header cell
+		// columns: array of columns
+		// headerIndex: header row index
+		render(h, { props }) {
+			console.log(props);
+			// render() is a render method in Vue
+			const { cells, columns, headerIndex } = props;
+			if (headerIndex === 2) return cells;
+
+			const groupCells = [];
+			let width = 0;
+			let idx = 0;
+
+			columns.forEach((column, columnIndex) => {
+				if (column.placeholderSign === TableV2Placeholder)
+					groupCells.push(cells[columnIndex]);
+				else {
+					width += cells[columnIndex].props.column.width;
+					idx++;
+
+					const nextColumn = columns[columnIndex + 1];
+					if (
+						columnIndex === columns.length - 1 ||
+						nextColumn.placeholderSign === TableV2Placeholder ||
+						idx === (headerIndex === 0 ? 4 : 2)
+					) {
+						groupCells.push(
+							h(
+								"div",
+								{
+									class: "flex items-center justify-center custom-header-cell",
+									role: "columnheader",
+									style: {
+										...cells[columnIndex].props.style,
+										width: `${width}px`,
+									},
+								},
+								`Group width ${width}`
+							)
+						);
+						width = 0;
+						idx = 0;
+					}
+				}
+			});
+
+			return groupCells;
+		},
+	};
+
 	onMounted(() => {
-		const [headers, values] = extractTableValue(functions.value);
+		const [headers, values] = extractTableValue(functions);
 		columns.value = generateColumns(headers);
 		data.value = generateData(columns.value, values);
 		// console.log("data", data);
