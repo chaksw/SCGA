@@ -17,6 +17,31 @@
 <script setup>
 	import { onMounted, ref, toRef } from "vue";
 
+	const keyMap = {
+		id: "ID",
+		module: 'File Name',
+		functions_name: 'Function',
+		function: "Function",
+		analyst: 'Analyst',
+		site: "Site",
+		start_date: "Start Date",
+		coverage: "Coverage",
+		percent_coverage_Analysis: "Percent Analysis",
+		percent_coverage_MCDC: "Percent MC/DC",
+		total_coverage: "Total by SC Tool",
+		covered: "Covered",
+		branches: "Branches",
+		pairs: "Pairs",
+		statement: "Statements",
+		total: 'Total',
+		defect_classification: "Defect Classification",
+		non_tech: "Non-Tech",
+		process: "Process",
+		tech: "Tech",
+		oversight: "Oversight",
+
+	}
+
 	const props = defineProps({
 		selectedModule: {
 			type: Object,
@@ -26,10 +51,10 @@
 	// 双向绑定： 将props中的selectdModule 和 该组件的selectedModule 双向绑定，让数据改变同步
 	const selectedModule = toRef(props, "selectedModule");
 	const functions = ref(selectedModule.value.functions);
+	// let headers = []
 	const columns = ref([]);
 	const data = ref([]);
-	
-	// console.log("testplan functions", functions.value);
+
 	const generateColumns = (headers, props) => {
 		// Array.from 主要用于从类数组对象或可迭代对象创建一个新的数组
 		// 如 Array.form({ 10 }) = [1,2,3,4,5,6,7,8,9]
@@ -46,14 +71,15 @@
 			...props, // 将 props 解构到列的配置对象中
 			key: `${curValue}-${columnIndex}`,
 			dataKey: `${curValue}-${columnIndex}`,
-			title: `${curValue}`,
+			title: `${keyMap[curValue]}`,
+			// title: `${curValue}`,
 			width: 180,
 		}));
 	};
 
-	const generateData = (columns, functions, prefix = "row-") =>
+	const generateData = (columns, values) =>
 		// 为每一行建立数据
-		Array.from({ length }).map((_, rowIndex) => {
+		Array.from(values).map((_, rowIndex) => {
 			// reduce 语法,
 			// array.reduce(callback, initialValue)
 			// callback(accumularotr, currentValue, currentIndex, array)
@@ -64,46 +90,60 @@
 			return columns.reduce(
 				// 为每一行的列元素建立（累积）数据
 				(rowData, column, columnIndex) => {
-					rowData[
-						column.dataKey
-					] = `Row ${rowIndex} - Col ${columnIndex}`;
+					rowData[column.dataKey] = values[rowIndex][columnIndex];
 
 					return rowData;
 				},
 				// 数组本身的元素 即 initialValue
 				{
-					id: `${prefix}${rowIndex}`,
+					id: `${rowIndex}`,
 					parentId: null,
 				}
 			);
 		});
 
-	const extract_nested = (dict) => {
-		let keys = [];
-		let value = [];
-		function recurseObject(obj) {
-			for (const [key, val] of Object.entries(dict)) {
-				
-			}
-		}
-	};
-
-	const generateTable = () => {
+	const extractKeysAndValues = (obj) => {
 		let keys = [];
 		let values = [];
-		if (functions.value != null && typeof functions.value === "object") {
-			for (arr of functions.value) {
+		function recurseKeys(o) {
+			for (let key in o) {
+				// deconstruct automatically the object{}
+				if (o.hasOwnProperty(key)) {
+					keys.push(key);
+					if (typeof o[key] === "object" && o[key] !== null) {
+						recurseKeys(o[key]);
+					} else {
+						values.push(o[key]);
+					}
+				}
 			}
-			keys = Object.keys(functions.value[0]);
-			values = Object.values(functions.value[0]);
 		}
-		console.log("keys", keys);
-		console.log("values", values);
-		columns.value = generateColumns(keys);
-		console.log(columns.value);
-		const data = generateData(columns.value, 200);
+		recurseKeys(obj);
+		return [keys, values];
 	};
-	generateTable();
+
+	const extractTableValue = (array) => {
+		let valuesList = [];
+		let keys = [];
+		for (const obj of array) {
+			let values = [];
+			let curKeys = [];
+			if (typeof obj === "object" && obj !== null) {
+				[curKeys, values] = extractKeysAndValues(obj);
+				if (!keys.length) keys = curKeys;
+				// console.log(curKeys);
+				// console.log(values);
+				valuesList.push(values);
+			}
+		}
+		return [keys, valuesList];
+	};
+	onMounted(() => {
+		const [headers, values] = extractTableValue(functions.value);
+		columns.value = generateColumns(headers);
+		data.value = generateData(columns.value, values);
+		// console.log("data", data);
+	});
 </script>
 
 <style lang="css" scoped></style>

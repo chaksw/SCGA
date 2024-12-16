@@ -47,7 +47,7 @@
 	// 生成固定列和数据
 	const columns = generateColumns(10);
 	const data = generateData(columns, 200);
-
+	// 固定前3列在左，14列及以上的在右，宽度为100
 	const fixedColumns = columns.map((column, columnIndex) => {
 		let fixed = undefined;
 		if (columnIndex < 3) fixed = TableV2FixedDir.LEFT;
@@ -62,9 +62,13 @@
 
 	// 自定义表头组件
 	const CustomizedHeader = {
-		functional: true,
-		props: ["cells", "columns", "headerIndex"],
-		render(h, { props }) {
+		functional: true, // defined as a functional component of which render only depends on the props injected. 
+
+		props: ["cells", "columns", "headerIndex"], // attributes that component received
+		// cells: array of header cell
+		// columns: array of columns
+		// headerIndex: header row index
+		render(h, { props }) { // render() is a render method in Vue
 			const { cells, columns, headerIndex } = props;
 			if (headerIndex === 2) return cells;
 
