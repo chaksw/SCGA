@@ -20,7 +20,8 @@
 </template>
 
 <script setup>
-	import { onMounted, ref, toRef } from "vue";
+	import { onMounted, ref, toRef, h } from "vue";
+	import { TableV2Placeholder, TableV2FixedDir } from "element-plus";
 
 	const keyMap = {
 		id: "ID",
@@ -57,9 +58,10 @@
 	const functions = selectedModule.value.functions;
 	// let headers = []
 	const columns = ref([]);
+	const fixedColumns = ref([]);
 	const data = ref([]);
 
-	const generateColumns = (headers, props) => {
+	const generateColumns = (headers, props = {}) => {
 		// Array.from 主要用于从类数组对象或可迭代对象创建一个新的数组
 		// 如 Array.form({ 10 }) = [1,2,3,4,5,6,7,8,9]
 		// Array.from(arrayLike, mapFn, thisArg)
@@ -79,11 +81,13 @@
 			// title: `${curValue}`,
 			width: 180,
 		}));
+		// console.log(columns);
+		// return columns;
 	};
 
-	const generateData = (columns, values) =>
+	const generateData = (columns, values) => {
 		// 为每一行建立数据
-		Array.from(values).map((_, rowIndex) => {
+		return Array.from(values).map((_, rowIndex) => {
 			// reduce 语法,
 			// array.reduce(callback, initialValue)
 			// callback(accumularotr, currentValue, currentIndex, array)
@@ -95,7 +99,6 @@
 				// 为每一行的列元素建立（累积）数据
 				(rowData, column, columnIndex) => {
 					rowData[column.dataKey] = values[rowIndex][columnIndex];
-
 					return rowData;
 				},
 				// 数组本身的元素 即 initialValue
@@ -105,6 +108,7 @@
 				}
 			);
 		});
+	};
 
 	const extractKeysAndValues = (obj) => {
 		let keys = [];
@@ -151,74 +155,88 @@
 		return [keys, valuesList];
 	};
 
-	// 固定前3列在左，14列及以上的在右，宽度为100
-	const fixedColumns = columns.value.map((column, columnIndex) => {
+	fixedColumns.value = columns.value.map((column, columnIndex) => {
 		let fixed = undefined;
 		if (columnIndex < 2) fixed = TableV2FixedDir.LEFT;
-		return { ...column, fixed, width: 100 };
+		return { ...column, fixed, width: 180 };
 	});
 
 	// 自定义表头组件
-	const CustomizedHeader = {
-		functional: true, // defined as a functional component of which render only depends on the props injected.
+	const CustomizedHeader = ({ cells, columns, headerIndex }) => {
+		// functional: true, // defined as a functional component of which render only depends on the props injected.
 
-		props: ["cells", "columns", "headerIndex"], // attributes that component received
-		// cells: array of header cell
-		// columns: array of columns
-		// headerIndex: header row index
-		render(h, { props }) {
-			console.log(props);
-			// render() is a render method in Vue
-			const { cells, columns, headerIndex } = props;
-			if (headerIndex === 2) return cells;
+		// props: ["cells", "columns", "headerIndex"], // attributes that component received
+		// // cells: array of header cell
+		// // columns: array of columns
+		// // headerIndex: header row index
+		// render(h, { props }) {
+		// 	console.log(props);
+		// 	// render() is a render method in Vue
+		// 	const { cells, columns, headerIndex } = props;
+		if (headerIndex === 2) return cells;
 
-			const groupCells = [];
-			let width = 0;
-			let idx = 0;
-
-			columns.forEach((column, columnIndex) => {
-				if (column.placeholderSign === TableV2Placeholder)
-					groupCells.push(cells[columnIndex]);
-				else {
-					width += cells[columnIndex].props.column.width;
-					idx++;
-
-					const nextColumn = columns[columnIndex + 1];
-					if (
-						columnIndex === columns.length - 1 ||
-						nextColumn.placeholderSign === TableV2Placeholder ||
-						idx === (headerIndex === 0 ? 4 : 2)
-					) {
-						groupCells.push(
-							h(
-								"div",
-								{
-									class: "flex items-center justify-center custom-header-cell",
-									role: "columnheader",
-									style: {
-										...cells[columnIndex].props.style,
-										width: `${width}px`,
-									},
+		const groupCells = [];
+		let width = 0;
+		let idx = 0;
+		// console.log(`columns: ${columns}`);
+		// console.log(`cells: ${cells}`);
+		// console.log(`headerIndex: ${headerIndex}`);
+		columns.forEach((column, columnIndex) => {
+			if (column.placeholderSign === TableV2Placeholder)
+				groupCells.push(cells[columnIndex]);
+			else {
+				width += cells[columnIndex].props.column.width;
+				idx++;
+				const nextColumn = columns[columnIndex + 1];
+				if (
+					columnIndex === columns.length - 1 ||
+					nextColumn.placeholderSign === TableV2Placeholder ||
+					idx === (headerIndex === 0 ? 4 : 2)
+				) {
+					groupCells.push(
+						h(
+							"div",
+							{
+								class: "flex items-center justify-center custom-header-cell",
+								role: "columnheader",
+								style: {
+									...cells[columnIndex].props.style,
+									width: `${width}px`,
 								},
-								`Group width ${width}`
-							)
-						);
-						width = 0;
-						idx = 0;
-					}
+							},
+							`Group width ${width}`
+						)
+					);
+					width = 0;
+					idx = 0;
 				}
-			});
+			}
+		});
+		return groupCells;
+		// 	},
+	};
 
-			return groupCells;
-		},
+	const headerClass = ({ headerIndex }) => {
+		if (headerIndex === 1) return "el-primary-color";
 	};
 
 	onMounted(() => {
 		const [headers, values] = extractTableValue(functions);
 		columns.value = generateColumns(headers);
 		data.value = generateData(columns.value, values);
+		fixedColumns.value = columns.value.map((column, columnIndex) => {
+			let fixed = undefined;
+			if (columnIndex < 2) fixed = TableV2FixedDir.LEFT;
+			return { ...column, fixed, width: 180 };
+		});
+		// console.log("columns: ", columns.value);
+		// console.log("fixedcolumns: ", fixedColumns.value);
 		// console.log("data", data);
 	});
+	// 1. #default #header作用是啥来着？
+	// 2. CustomizedHeader 中的逻辑是啥，各个参数代表啥
+	// 3. generateColumns中的props是啥，和template中的props有关系吗
+	// 4. 经过更新template中的props如何获取？代表的本身是啥
 </script>
 
 <style lang="css" scoped></style>
