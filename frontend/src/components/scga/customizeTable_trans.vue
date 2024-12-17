@@ -69,6 +69,7 @@
 		// columns: array of columns
 		// headerIndex: header row index
 		render(h, { props }) { // render() is a render method in Vue
+			// h used to create visual DOM
 			const { cells, columns, headerIndex } = props;
 			if (headerIndex === 2) return cells;
 
